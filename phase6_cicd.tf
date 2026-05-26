@@ -22,7 +22,7 @@ variable "github_repo" {
 # ECR — private container registry
 # -----------------------------------------------------------
 resource "aws_ecr_repository" "app" {
-  name                 = "${var.project_name}-app"
+  name                 = "${local.service_name}-app"
   image_tag_mutability = "IMMUTABLE" # tags cannot be overwritten
 
   image_scanning_configuration {
@@ -35,7 +35,7 @@ resource "aws_ecr_repository" "app" {
   }
 
   tags = {
-    Name = "${var.project_name}-ecr"
+    Name = "${local.service_name}-ecr"
   }
 }
 
@@ -84,7 +84,7 @@ resource "aws_iam_openid_connect_provider" "github" {
   thumbprint_list = [data.tls_certificate.github.certificates[0].sha1_fingerprint]
 
   tags = {
-    Name = "${var.project_name}-github-oidc"
+    Name = "${local.service_name}-github-oidc"
   }
 }
 
@@ -121,11 +121,11 @@ data "aws_iam_policy_document" "github_actions_assume" {
 }
 
 resource "aws_iam_role" "github_actions" {
-  name               = "${var.project_name}-github-actions"
+  name               = "${local.service_name}-github-actions"
   assume_role_policy = data.aws_iam_policy_document.github_actions_assume.json
 
   tags = {
-    Name = "${var.project_name}-github-actions-role"
+    Name = "${local.service_name}-github-actions-role"
   }
 }
 
@@ -213,7 +213,7 @@ data "aws_iam_policy_document" "github_actions_permissions" {
       "lambda:UpdateAlias"
     ]
     resources = [
-      "arn:aws:lambda:us-east-1:886181574003:function:${var.project_name}-*"
+      "arn:aws:lambda:us-east-1:886181574003:function:${local.service_name}-*"
     ]
   }
 
@@ -235,7 +235,7 @@ data "aws_iam_policy_document" "github_actions_permissions" {
 }
 
 resource "aws_iam_role_policy" "github_actions" {
-  name   = "${var.project_name}-github-actions-policy"
+  name   = "${local.service_name}-github-actions-policy"
   role   = aws_iam_role.github_actions.id
   policy = data.aws_iam_policy_document.github_actions_permissions.json
 }
