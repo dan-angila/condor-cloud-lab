@@ -1,49 +1,63 @@
-# Create an S3 bucket using Terraform
-resource "aws_s3_bucket" "my_bucket" {
-  bucket = "terraform-bucket-kali"
+# ─── KEY PAIR ────────────────────────────────────────────────
+
+# SSH key pair for EC2 access
+resource "aws_key_pair" "deployer" {
+  key_name   = "${local.service_name}-key"
+  public_key = file("${path.home}/.ssh/danielphilip-key.pub")
 }
+
+# ─── IAM — BASE RESOURCES ────────────────────────────────────
 
 # Create an IAM user using Terraform
 resource "aws_iam_user" "developer" {
-  name = "terraform-developer"
+  name = "${local.service_name}-developer"
+  tags = merge(local.common_tags, { Name = "${local.service_name}-developer" })
 }
 
 # Create an IAM group
 resource "aws_iam_group" "devs" {
-  name = "terraform-devs"
+  name = "${local.service_name}-devs"
+}
+
+# ─── S3 — BASE STORAGE ───────────────────────────────────────
+
+# Create an S3 bucket using Terraform
+resource "aws_s3_bucket" "my_bucket" {
+  bucket = "${local.service_name}-terraform-bucket-${local.bucket_suffix}"
+  tags   = merge(local.common_tags, { Name = "${local.service_name}-terraform-bucket" })
 }
 
 # ─── NETWORKING LAYER ────────────────────────────────────────
 
 # VPC
 resource "aws_vpc" "main" {
-  cidr_block           = "10.0.0.0/16"
+  cidr_block           = var.cidr_block
   enable_dns_support   = true
   enable_dns_hostnames = true
-  tags                 = { Name = "psycho-vpc" }
+  tags                 = merge(local.common_tags, { Name = "${local.service_name}-vpc" })
 }
 
 # Public Subnet (for load balancers, bastion hosts)
 resource "aws_subnet" "public" {
   vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.0.1.0/24"
-  availability_zone       = "us-east-1a"
+  cidr_block              = var.public_cidr
+  availability_zone       = local.availability_zone
   map_public_ip_on_launch = true
-  tags                    = { Name = "psycho-public" }
+  tags                    = merge(local.common_tags, { Name = "${local.service_name}-public-subnet" })
 }
 
 # Private Subnet (for app servers, databases)
 resource "aws_subnet" "private" {
   vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = "us-east-1a"
-  tags              = { Name = "psycho-private" }
+  cidr_block        = var.private_cidr
+  availability_zone = local.availability_zone
+  tags              = merge(local.common_tags, { Name = "${local.service_name}-private-subnet" })
 }
 
 # Internet Gateway (gives public subnet internet access)
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
-  tags   = { Name = "psycho-igw" }
+  tags   = merge(local.common_tags, { Name = "${local.service_name}-igw" })
 }
 
 # Public Route Table
@@ -53,7 +67,7 @@ resource "aws_route_table" "public" {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.igw.id
   }
-  tags = { Name = "psycho-public-rt" }
+  tags = merge(local.common_tags, { Name = "${local.service_name}-public-rt" })
 }
 
 # Associate public subnet with public route table
@@ -64,42 +78,45 @@ resource "aws_route_table_association" "public" {
 
 # Security Group — allows HTTP and SSH inbound
 resource "aws_security_group" "web" {
-  name   = "danielphilip-web-sg"
+  name   = "${local.service_name}-web-sg"
   vpc_id = aws_vpc.main.id
 
   ingress {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["102.219.210.194/32"]
+    cidr_blocks = [var.ssh_access_cidr]
   }
 
   ingress {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = ["102.219.210.194/32"]
+    cidr_blocks = [var.ssh_access_cidr]
   }
+
   ingress {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  tags = { Name = "psycho-web-sg" }
+
+  tags = merge(local.common_tags, { Name = "${local.service_name}-web-sg" })
 }
 
 # ─── COMPUTE LAYER ───────────────────────────────────────────
 
 # IAM Role for EC2 (lets the instance talk to AWS services)
 resource "aws_iam_role" "ec2_role" {
-  name = "danielphilip-ec2-role"
+  name = "${local.service_name}-ec2-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -108,6 +125,7 @@ resource "aws_iam_role" "ec2_role" {
       Principal = { Service = "ec2.amazonaws.com" }
     }]
   })
+  tags = merge(local.common_tags, { Name = "${local.service_name}-ec2-role" })
 }
 
 # Attach S3 read access to the EC2 role
@@ -118,14 +136,14 @@ resource "aws_iam_role_policy_attachment" "ec2_s3" {
 
 # Instance profile (wraps the role so EC2 can use it)
 resource "aws_iam_instance_profile" "ec2_profile" {
-  name = "danielphilip-ec2-profile"
+  name = "${local.service_name}-ec2-profile"
   role = aws_iam_role.ec2_role.name
 }
 
 # EC2 Instance — sits in public subnet, uses web security group
 resource "aws_instance" "web" {
-  ami                         = "ami-0d5e7e27578d32e47" # LocalStack accepts any AMI ID
-  instance_type               = "t3.micro"
+  ami                         = var.ec2_ami
+  instance_type               = var.ec2_instance_type
   key_name                    = aws_key_pair.deployer.key_name
   subnet_id                   = aws_subnet.public.id
   vpc_security_group_ids      = [aws_security_group.web.id]
@@ -141,21 +159,21 @@ resource "aws_instance" "web" {
     echo "<h1>Condor Cloud Lab — Web Server</h1>" > /var/www/html/index.html
   USERDATA
 
-  tags = { Name = "danielphilip-web-01" }
+  tags = merge(local.common_tags, { Name = "${local.service_name}-web-01" })
 }
 
 # Elastic IP — gives the instance a static public IP
 resource "aws_eip" "web" {
   instance = aws_instance.web.id
   domain   = "vpc"
-  tags     = { Name = "danielphilip-eip" }
+  tags     = merge(local.common_tags, { Name = "${local.service_name}-eip" })
 }
 
 # ─── APP LAYER ───────────────────────────────────────────────
 
 # DynamoDB — users table
 resource "aws_dynamodb_table" "users" {
-  name         = "danielphilip-users"
+  name         = "${local.service_name}-users"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "userId"
 
@@ -164,27 +182,27 @@ resource "aws_dynamodb_table" "users" {
     type = "S"
   }
 
-  tags = { Name = "danielphilip-users" }
+  tags = merge(local.common_tags, { Name = "${local.service_name}-users" })
 }
 
 # SQS Queue — job processing
 resource "aws_sqs_queue" "jobs" {
-  name                      = "danielphilip-jobs"
+  name                      = "${local.service_name}-jobs"
   delay_seconds             = 0
   max_message_size          = 262144
   message_retention_seconds = 86400
-  tags                      = { Name = "danielphilip-jobs" }
+  tags                      = merge(local.common_tags, { Name = "${local.service_name}-jobs" })
 }
 
 # SQS Dead Letter Queue — failed jobs land here
 resource "aws_sqs_queue" "jobs_dlq" {
-  name = "danielphilip-jobs-dlq"
-  tags = { Name = "danielphilip-jobs-dlq" }
+  name = "${local.service_name}-jobs-dlq"
+  tags = merge(local.common_tags, { Name = "${local.service_name}-jobs-dlq" })
 }
 
 # IAM Role for Lambda
 resource "aws_iam_role" "lambda_role" {
-  name = "danielphilip-lambda-role"
+  name = "${local.service_name}-lambda-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -193,28 +211,29 @@ resource "aws_iam_role" "lambda_role" {
       Principal = { Service = "lambda.amazonaws.com" }
     }]
   })
+  tags = merge(local.common_tags, { Name = "${local.service_name}-lambda-role" })
 }
 
 # Lambda policy — DynamoDB + SQS + logs
 resource "aws_iam_role_policy" "lambda_policy" {
-  name = "danielphilip-lambda-policy"
+  name = "${local.service_name}-lambda-policy"
   role = aws_iam_role.lambda_role.id
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Effect   = "Allow"
-        Action   = ["dynamodb:PutItem", "dynamodb:GetItem", "dynamodb:Scan", "dynamodb:UpdateItem", "dynamodb:DeleteItem"]
+        Effect = "Allow"
+        Action = ["dynamodb:PutItem", "dynamodb:GetItem", "dynamodb:Scan", "dynamodb:UpdateItem", "dynamodb:DeleteItem"]
         Resource = aws_dynamodb_table.users.arn
       },
       {
-        Effect   = "Allow"
-        Action   = ["sqs:SendMessage", "sqs:ReceiveMessage", "sqs:DeleteMessage"]
+        Effect = "Allow"
+        Action = ["sqs:SendMessage", "sqs:ReceiveMessage", "sqs:DeleteMessage"]
         Resource = aws_sqs_queue.jobs.arn
       },
       {
-        Effect   = "Allow"
-        Action   = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"]
+        Effect = "Allow"
+        Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"]
         Resource = "*"
       }
     ]
@@ -226,7 +245,7 @@ data "archive_file" "lambda_zip" {
   type        = "zip"
   output_path = "/tmp/danielphilip-lambda.zip"
   source {
-    content  = <<PYTHON
+    content = <<PYTHON
 import json
 import boto3
 import os
@@ -235,8 +254,8 @@ from datetime import datetime
 dynamodb = boto3.resource('dynamodb')
 sqs      = boto3.client('sqs')
 
-TABLE = os.environ.get('USERS_TABLE', 'danielphilip-users')
-QUEUE = os.environ.get('JOBS_QUEUE',  'danielphilip-jobs')
+TABLE = os.environ.get('USERS_TABLE', '${local.service_name}-users')
+QUEUE = os.environ.get('JOBS_QUEUE',  '${local.service_name}-jobs')
 
 def handler(event, context):
     method = event.get('httpMethod', 'GET')
@@ -278,10 +297,10 @@ PYTHON
 # Lambda function
 resource "aws_lambda_function" "api" {
   filename         = data.archive_file.lambda_zip.output_path
-  function_name    = "danielphilip-api"
+  function_name    = "${local.service_name}-api"
   role             = aws_iam_role.lambda_role.arn
   handler          = "handler.handler"
-  runtime          = "python3.11"
+  runtime          = var.lambda_runtime
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
 
   environment {
@@ -291,13 +310,14 @@ resource "aws_lambda_function" "api" {
     }
   }
 
-  tags = { Name = "danielphilip-api" }
+  tags = merge(local.common_tags, { Name = "${local.service_name}-api" })
 }
 
 # API Gateway
 resource "aws_api_gateway_rest_api" "main" {
-  name        = "danielphilip-api-gw"
+  name        = "${local.service_name}-api-gw"
   description = "Condor Cloud Lab API"
+  tags        = merge(local.common_tags, { Name = "${local.service_name}-api-gw" })
 }
 
 resource "aws_api_gateway_resource" "proxy" {
@@ -341,21 +361,21 @@ resource "aws_lambda_permission" "apigw" {
 
 # CloudWatch log group for Lambda
 resource "aws_cloudwatch_log_group" "lambda_logs" {
-  name              = "/aws/lambda/danielphilip-api"
-  retention_in_days = 7
-  tags              = { Name = "danielphilip-lambda-logs" }
+  name              = "/aws/lambda/${local.service_name}-api"
+  retention_in_days = var.cloudwatch_retention_days
+  tags              = merge(local.common_tags, { Name = "${local.service_name}-lambda-logs" })
 }
 
 # ─── SNS NOTIFICATIONS ───────────────────────────────────────
 
 resource "aws_sns_topic" "alerts" {
-  name = "danielphilip-alerts"
-  tags = { Name = "danielphilip-alerts" }
+  name = "${local.service_name}-alerts"
+  tags = merge(local.common_tags, { Name = "${local.service_name}-alerts" })
 }
 
 resource "aws_sns_topic" "deployments" {
-  name = "danielphilip-deployments"
-  tags = { Name = "danielphilip-deployments" }
+  name = "${local.service_name}-deployments"
+  tags = merge(local.common_tags, { Name = "${local.service_name}-deployments" })
 }
 
 # Wire SQS to SNS — alerts fan out to the jobs queue
@@ -368,94 +388,55 @@ resource "aws_sns_topic_subscription" "alerts_to_sqs" {
 # ─── S3 APP STORAGE ──────────────────────────────────────────
 
 resource "aws_s3_bucket" "app_storage" {
-  bucket = "danielphilip-app-storage"
-  tags   = { Name = "danielphilip-app-storage" }
+  bucket = "${local.service_name}-app-storage-${local.bucket_suffix}"
+  tags   = merge(local.common_tags, { Name = "${local.service_name}-app-storage" })
 }
 
 resource "aws_s3_bucket_versioning" "app_storage" {
   bucket = aws_s3_bucket.app_storage.id
-  versioning_configuration { status = "Enabled" }
+  versioning_configuration {
+    status = "Enabled"
+  }
 }
 
 # Versioning on the original bucket
 resource "aws_s3_bucket_versioning" "main_bucket" {
   bucket = aws_s3_bucket.my_bucket.id
-  versioning_configuration { status = "Enabled" }
+  versioning_configuration {
+    status = "Enabled"
+  }
 }
 
 # ─── IAM — ATTACH POLICY TO GROUP ───────────────────────────
 
 resource "aws_iam_policy" "dev_policy" {
-  name = "danielphilip-dev-policy"
+  name = "${local.service_name}-dev-policy"
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Effect   = "Allow"
-        Action   = ["s3:GetObject", "s3:PutObject", "s3:ListBucket"]
+        Effect = "Allow"
+        Action = ["s3:GetObject", "s3:PutObject", "s3:ListBucket"]
         Resource = ["${aws_s3_bucket.app_storage.arn}", "${aws_s3_bucket.app_storage.arn}/*"]
       },
       {
-        Effect   = "Allow"
-        Action   = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:Scan"]
+        Effect = "Allow"
+        Action = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:Scan"]
         Resource = aws_dynamodb_table.users.arn
       },
       {
-        Effect   = "Allow"
-        Action   = ["sqs:SendMessage", "sqs:ReceiveMessage"]
+        Effect = "Allow"
+        Action = ["sqs:SendMessage", "sqs:ReceiveMessage"]
         Resource = aws_sqs_queue.jobs.arn
       }
     ]
   })
+  tags = merge(local.common_tags, { Name = "${local.service_name}-dev-policy" })
 }
 
 resource "aws_iam_group_policy_attachment" "devs_policy" {
   group      = aws_iam_group.devs.name
   policy_arn = aws_iam_policy.dev_policy.arn
-}
-
-# ─── OUTPUTS ─────────────────────────────────────────────────
-
-output "api_url" {
-  value       = "https://${aws_api_gateway_rest_api.main.id}.execute-api.us-east-1.amazonaws.com/prod"
-  description = "Condor API Gateway URL"
-}
-
-output "lambda_name" {
-  value = aws_lambda_function.api.function_name
-}
-
-output "dynamodb_table" {
-  value = aws_dynamodb_table.users.name
-}
-
-output "jobs_queue_url" {
-  value = aws_sqs_queue.jobs.url
-}
-
-output "app_storage_bucket" {
-  value = aws_s3_bucket.app_storage.bucket
-}
-
-output "alerts_topic_arn" {
-  value = aws_sns_topic.alerts.arn
-}
-
-output "ec2_instance_id" {
-  value = aws_instance.web.id
-}
-
-output "ec2_public_ip" {
-  value = aws_eip.web.public_ip
-}
-
-output "vpc_id" {
-  value = aws_vpc.main.id
-}
-
-resource "aws_key_pair" "deployer" {
-  key_name   = "danielphilip-key"
-  public_key = file("~/.ssh/danielphilip-key.pub")
 }
 
 # ─── PHASE 5: SECURITY HARDENING ─────────────────────────────
@@ -465,17 +446,18 @@ resource "aws_kms_key" "main" {
   description             = "Condor Cloud Lab master encryption key"
   deletion_window_in_days = 7
   enable_key_rotation     = true
-  tags                    = { Name = "danielphilip-kms-key" }
+  tags                    = merge(local.common_tags, { Name = "${local.service_name}-kms-key" })
 }
 
 resource "aws_kms_alias" "main" {
-  name          = "alias/danielphilip-key"
+  name          = "alias/${local.service_name}-key"
   target_key_id = aws_kms_key.main.key_id
 }
 
-# S3 bucket encryption
+# S3 bucket encryption with corrected syntax
 resource "aws_s3_bucket_server_side_encryption_configuration" "app_storage" {
   bucket = aws_s3_bucket.app_storage.id
+
   rule {
     apply_server_side_encryption_by_default {
       sse_algorithm     = "aws:kms"
@@ -486,6 +468,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "app_storage" {
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "main_bucket" {
   bucket = aws_s3_bucket.my_bucket.id
+
   rule {
     apply_server_side_encryption_by_default {
       sse_algorithm     = "aws:kms"
@@ -513,9 +496,9 @@ resource "aws_s3_bucket_public_access_block" "main_bucket" {
 
 # CloudTrail — audit every API call
 resource "aws_s3_bucket" "cloudtrail" {
-  bucket        = "danielphilip-cloudtrail-logs"
+  bucket        = "${local.service_name}-cloudtrail-logs-${local.bucket_suffix}"
   force_destroy = true
-  tags          = { Name = "danielphilip-cloudtrail-logs" }
+  tags          = merge(local.common_tags, { Name = "${local.service_name}-cloudtrail-logs" })
 }
 
 resource "aws_s3_bucket_public_access_block" "cloudtrail" {
@@ -532,18 +515,22 @@ resource "aws_s3_bucket_policy" "cloudtrail" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid       = "AWSCloudTrailAclCheck"
-        Effect    = "Allow"
-        Principal = { Service = "cloudtrail.amazonaws.com" }
-        Action    = "s3:GetBucketAcl"
-        Resource  = aws_s3_bucket.cloudtrail.arn
+        Sid    = "AWSCloudTrailAclCheck"
+        Effect = "Allow"
+        Principal = {
+          Service = "cloudtrail.amazonaws.com"
+        }
+        Action   = "s3:GetBucketAcl"
+        Resource = aws_s3_bucket.cloudtrail.arn
       },
       {
-        Sid       = "AWSCloudTrailWrite"
-        Effect    = "Allow"
-        Principal = { Service = "cloudtrail.amazonaws.com" }
-        Action    = "s3:PutObject"
-        Resource  = "${aws_s3_bucket.cloudtrail.arn}/AWSLogs/886181574003/*"
+        Sid    = "AWSCloudTrailWrite"
+        Effect = "Allow"
+        Principal = {
+          Service = "cloudtrail.amazonaws.com"
+        }
+        Action   = "s3:PutObject"
+        Resource = "${aws_s3_bucket.cloudtrail.arn}/AWSLogs/${data.aws_caller_identity.current.account_id}/*"
         Condition = {
           StringEquals = {
             "s3:x-amz-acl" = "bucket-owner-full-control"
@@ -555,13 +542,13 @@ resource "aws_s3_bucket_policy" "cloudtrail" {
 }
 
 resource "aws_cloudtrail" "main" {
-  name                          = "danielphilip-trail"
+  name                          = "${local.service_name}-trail"
   s3_bucket_name                = aws_s3_bucket.cloudtrail.id
   include_global_service_events = true
   is_multi_region_trail         = false
   enable_log_file_validation    = true
   kms_key_id                    = aws_kms_key.main.arn
-  tags                          = { Name = "danielphilip-trail" }
+  tags                          = merge(local.common_tags, { Name = "${local.service_name}-trail" })
   depends_on                    = [aws_s3_bucket_policy.cloudtrail]
 }
 
@@ -572,13 +559,13 @@ resource "aws_ec2_instance_metadata_defaults" "main" {
 
 # VPC Flow Logs — capture all network traffic
 resource "aws_cloudwatch_log_group" "vpc_flow_logs" {
-  name              = "/aws/vpc/danielphilip-flow-logs"
-  retention_in_days = 7
-  tags              = { Name = "danielphilip-vpc-flow-logs" }
+  name              = "/aws/vpc/${local.service_name}-flow-logs"
+  retention_in_days = var.cloudwatch_retention_days
+  tags              = merge(local.common_tags, { Name = "${local.service_name}-vpc-flow-logs" })
 }
 
 resource "aws_iam_role" "vpc_flow_logs" {
-  name = "danielphilip-vpc-flow-logs-role"
+  name = "${local.service_name}-vpc-flow-logs-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -587,10 +574,11 @@ resource "aws_iam_role" "vpc_flow_logs" {
       Principal = { Service = "vpc-flow-logs.amazonaws.com" }
     }]
   })
+  tags = merge(local.common_tags, { Name = "${local.service_name}-vpc-flow-logs-role" })
 }
 
 resource "aws_iam_role_policy" "vpc_flow_logs" {
-  name = "danielphilip-vpc-flow-logs-policy"
+  name = "${local.service_name}-vpc-flow-logs-policy"
   role = aws_iam_role.vpc_flow_logs.id
   policy = jsonencode({
     Version = "2012-10-17"
@@ -610,10 +598,10 @@ resource "aws_iam_role_policy" "vpc_flow_logs" {
 
 resource "aws_flow_log" "main" {
   iam_role_arn    = aws_iam_role.vpc_flow_logs.arn
-  log_destination = aws_cloudwatch_log_group.vpc_flow_logs.arn
+  log_destination = "${aws_cloudwatch_log_group.vpc_flow_logs.arn}:*"
   traffic_type    = "ALL"
   vpc_id          = aws_vpc.main.id
-  tags            = { Name = "danielphilip-flow-log" }
+  tags            = merge(local.common_tags, { Name = "${local.service_name}-flow-log" })
 }
 
 # KMS key policy — allow CloudTrail to use the key
@@ -626,7 +614,7 @@ resource "aws_kms_key_policy" "main" {
         Sid    = "Enable IAM User Permissions"
         Effect = "Allow"
         Principal = {
-          AWS = "arn:aws:iam::886181574003:root"
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
         }
         Action   = "kms:*"
         Resource = "*"
