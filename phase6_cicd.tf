@@ -232,6 +232,151 @@ data "aws_iam_policy_document" "github_actions_permissions" {
     ]
     resources = ["*"]
   }
+
+  statement {
+    sid    = "IAMManage"
+    effect = "Allow"
+    actions = [
+      "iam:CreateRole", "iam:DeleteRole", "iam:UpdateRole",
+      "iam:AttachRolePolicy", "iam:DetachRolePolicy",
+      "iam:PutRolePolicy", "iam:DeleteRolePolicy",
+      "iam:CreatePolicy", "iam:DeletePolicy", "iam:CreatePolicyVersion", "iam:DeletePolicyVersion",
+      "iam:CreateUser", "iam:DeleteUser", "iam:TagUser",
+      "iam:CreateGroup", "iam:DeleteGroup",
+      "iam:AddUserToGroup", "iam:RemoveUserFromGroup",
+      "iam:AttachGroupPolicy", "iam:DetachGroupPolicy",
+      "iam:CreateInstanceProfile", "iam:DeleteInstanceProfile",
+      "iam:AddRoleToInstanceProfile", "iam:RemoveRoleFromInstanceProfile",
+      "iam:CreateOpenIDConnectProvider", "iam:DeleteOpenIDConnectProvider",
+      "iam:UpdateOpenIDConnectProviderThumbprint",
+      "iam:PassRole", "iam:TagRole", "iam:TagPolicy",
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "EC2Manage"
+    effect = "Allow"
+    actions = [
+      "ec2:CreateVpc", "ec2:DeleteVpc", "ec2:ModifyVpcAttribute",
+      "ec2:CreateSubnet", "ec2:DeleteSubnet", "ec2:ModifySubnetAttribute",
+      "ec2:CreateInternetGateway", "ec2:DeleteInternetGateway",
+      "ec2:AttachInternetGateway", "ec2:DetachInternetGateway",
+      "ec2:CreateRouteTable", "ec2:DeleteRouteTable",
+      "ec2:CreateRoute", "ec2:DeleteRoute",
+      "ec2:AssociateRouteTable", "ec2:DisassociateRouteTable",
+      "ec2:CreateSecurityGroup", "ec2:DeleteSecurityGroup",
+      "ec2:AuthorizeSecurityGroupIngress", "ec2:RevokeSecurityGroupIngress",
+      "ec2:AuthorizeSecurityGroupEgress", "ec2:RevokeSecurityGroupEgress",
+      "ec2:RunInstances", "ec2:TerminateInstances", "ec2:StopInstances", "ec2:StartInstances",
+      "ec2:ImportKeyPair", "ec2:DeleteKeyPair",
+      "ec2:AllocateAddress", "ec2:ReleaseAddress",
+      "ec2:AssociateAddress", "ec2:DisassociateAddress",
+      "ec2:ModifyInstanceMetadataDefaults",
+      "ec2:CreateFlowLogs", "ec2:DeleteFlowLogs",
+      "ec2:CreateTags", "ec2:DeleteTags",
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "S3Manage"
+    effect = "Allow"
+    actions = [
+      "s3:CreateBucket", "s3:DeleteBucket",
+      "s3:PutBucketPolicy", "s3:DeleteBucketPolicy",
+      "s3:PutBucketPublicAccessBlock", "s3:GetBucketPublicAccessBlock",
+      "s3:PutBucketVersioning", "s3:GetBucketVersioning",
+      "s3:PutEncryptionConfiguration", "s3:GetEncryptionConfiguration",
+      "s3:PutBucketTagging", "s3:GetBucketTagging",
+      "s3:GetBucketLocation", "s3:GetBucketAcl",
+      "s3:GetAccelerateConfiguration", "s3:GetBucketCORS",
+      "s3:GetBucketLogging", "s3:GetBucketNotification",
+      "s3:GetBucketObjectLockConfiguration", "s3:GetBucketRequestPayment",
+      "s3:GetBucketWebsite", "s3:GetReplicationConfiguration",
+      "s3:GetLifecycleConfiguration", "s3:ListBucketVersions",
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "MessagingManage"
+    effect = "Allow"
+    actions = [
+      "dynamodb:CreateTable", "dynamodb:DeleteTable", "dynamodb:UpdateTable",
+      "dynamodb:DescribeTable", "dynamodb:DescribeTimeToLive",
+      "dynamodb:DescribeContinuousBackups", "dynamodb:ListTagsOfResource",
+      "dynamodb:TagResource", "dynamodb:UntagResource",
+      "sqs:CreateQueue", "sqs:DeleteQueue", "sqs:SetQueueAttributes",
+      "sqs:GetQueueAttributes", "sqs:TagQueue",
+      "sns:CreateTopic", "sns:DeleteTopic", "sns:SetTopicAttributes",
+      "sns:GetTopicAttributes", "sns:Subscribe", "sns:Unsubscribe",
+      "sns:ListTagsForResource", "sns:TagResource",
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "LogsManage"
+    effect = "Allow"
+    actions = [
+      "logs:CreateLogGroup", "logs:DeleteLogGroup",
+      "logs:PutRetentionPolicy", "logs:DeleteRetentionPolicy",
+      "logs:TagLogGroup", "logs:ListTagsLogGroup",
+      "logs:AssociateKmsKey", "logs:DisassociateKmsKey",
+      "logs:PutLogEvents", "logs:CreateLogStream",
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid       = "APIGatewayManage"
+    effect    = "Allow"
+    actions   = ["apigateway:*"]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "LambdaManage"
+    effect = "Allow"
+    actions = [
+      "lambda:CreateFunction", "lambda:DeleteFunction",
+      "lambda:UpdateFunctionCode", "lambda:UpdateFunctionConfiguration",
+      "lambda:GetFunction", "lambda:GetFunctionConfiguration",
+      "lambda:AddPermission", "lambda:RemovePermission",
+      "lambda:PublishVersion", "lambda:CreateAlias",
+      "lambda:DeleteAlias", "lambda:UpdateAlias",
+      "lambda:ListVersionsByFunction", "lambda:TagResource", "lambda:UntagResource",
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "KMSManage"
+    effect = "Allow"
+    actions = [
+      "kms:CreateKey", "kms:ScheduleKeyDeletion", "kms:CancelKeyDeletion",
+      "kms:EnableKey", "kms:DisableKey",
+      "kms:PutKeyPolicy", "kms:GetKeyPolicy",
+      "kms:CreateAlias", "kms:DeleteAlias", "kms:UpdateAlias",
+      "kms:TagResource", "kms:UntagResource",
+      "kms:EnableKeyRotation", "kms:DisableKeyRotation",
+      "kms:GetKeyRotationStatus", "kms:DescribeKey",
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "CloudTrailManage"
+    effect = "Allow"
+    actions = [
+      "cloudtrail:CreateTrail", "cloudtrail:DeleteTrail", "cloudtrail:UpdateTrail",
+      "cloudtrail:StartLogging", "cloudtrail:StopLogging",
+      "cloudtrail:PutEventSelectors", "cloudtrail:AddTags", "cloudtrail:RemoveTags",
+    ]
+    resources = ["*"]
+  }
+
 }
 
 resource "aws_iam_role_policy" "github_actions" {
