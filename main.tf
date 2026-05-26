@@ -457,3 +457,192 @@ resource "aws_key_pair" "deployer" {
   key_name   = "danielphilip-key"
   public_key = file("~/.ssh/danielphilip-key.pub")
 }
+
+# ─── PHASE 5: SECURITY HARDENING ─────────────────────────────
+
+# KMS key for encryption
+resource "aws_kms_key" "main" {
+  description             = "Condor Cloud Lab master encryption key"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+  tags                    = { Name = "danielphilip-kms-key" }
+}
+
+resource "aws_kms_alias" "main" {
+  name          = "alias/danielphilip-key"
+  target_key_id = aws_kms_key.main.key_id
+}
+
+# S3 bucket encryption
+resource "aws_s3_bucket_server_side_encryption_configuration" "app_storage" {
+  bucket = aws_s3_bucket.app_storage.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm     = "aws:kms"
+      kms_master_key_id = aws_kms_key.main.arn
+    }
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "main_bucket" {
+  bucket = aws_s3_bucket.my_bucket.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm     = "aws:kms"
+      kms_master_key_id = aws_kms_key.main.arn
+    }
+  }
+}
+
+# S3 bucket public access block
+resource "aws_s3_bucket_public_access_block" "app_storage" {
+  bucket                  = aws_s3_bucket.app_storage.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_public_access_block" "main_bucket" {
+  bucket                  = aws_s3_bucket.my_bucket.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# CloudTrail — audit every API call
+resource "aws_s3_bucket" "cloudtrail" {
+  bucket        = "danielphilip-cloudtrail-logs"
+  force_destroy = true
+  tags          = { Name = "danielphilip-cloudtrail-logs" }
+}
+
+resource "aws_s3_bucket_public_access_block" "cloudtrail" {
+  bucket                  = aws_s3_bucket.cloudtrail.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_policy" "cloudtrail" {
+  bucket = aws_s3_bucket.cloudtrail.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "AWSCloudTrailAclCheck"
+        Effect    = "Allow"
+        Principal = { Service = "cloudtrail.amazonaws.com" }
+        Action    = "s3:GetBucketAcl"
+        Resource  = aws_s3_bucket.cloudtrail.arn
+      },
+      {
+        Sid       = "AWSCloudTrailWrite"
+        Effect    = "Allow"
+        Principal = { Service = "cloudtrail.amazonaws.com" }
+        Action    = "s3:PutObject"
+        Resource  = "${aws_s3_bucket.cloudtrail.arn}/AWSLogs/886181574003/*"
+        Condition = {
+          StringEquals = {
+            "s3:x-amz-acl" = "bucket-owner-full-control"
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_cloudtrail" "main" {
+  name                          = "danielphilip-trail"
+  s3_bucket_name                = aws_s3_bucket.cloudtrail.id
+  include_global_service_events = true
+  is_multi_region_trail         = false
+  enable_log_file_validation    = true
+  kms_key_id                    = aws_kms_key.main.arn
+  tags                          = { Name = "danielphilip-trail" }
+  depends_on                    = [aws_s3_bucket_policy.cloudtrail]
+}
+
+# IMDSv2 — enforce on EC2 (prevents SSRF attacks)
+resource "aws_ec2_instance_metadata_defaults" "main" {
+  http_tokens = "required"
+}
+
+# VPC Flow Logs — capture all network traffic
+resource "aws_cloudwatch_log_group" "vpc_flow_logs" {
+  name              = "/aws/vpc/danielphilip-flow-logs"
+  retention_in_days = 7
+  tags              = { Name = "danielphilip-vpc-flow-logs" }
+}
+
+resource "aws_iam_role" "vpc_flow_logs" {
+  name = "danielphilip-vpc-flow-logs-role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action    = "sts:AssumeRole"
+      Effect    = "Allow"
+      Principal = { Service = "vpc-flow-logs.amazonaws.com" }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "vpc_flow_logs" {
+  name = "danielphilip-vpc-flow-logs-policy"
+  role = aws_iam_role.vpc_flow_logs.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents",
+        "logs:DescribeLogGroups",
+        "logs:DescribeLogStreams"
+      ]
+      Resource = "*"
+    }]
+  })
+}
+
+resource "aws_flow_log" "main" {
+  iam_role_arn    = aws_iam_role.vpc_flow_logs.arn
+  log_destination = aws_cloudwatch_log_group.vpc_flow_logs.arn
+  traffic_type    = "ALL"
+  vpc_id          = aws_vpc.main.id
+  tags            = { Name = "danielphilip-flow-log" }
+}
+
+# KMS key policy — allow CloudTrail to use the key
+resource "aws_kms_key_policy" "main" {
+  key_id = aws_kms_key.main.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::886181574003:root"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow CloudTrail to encrypt logs"
+        Effect = "Allow"
+        Principal = {
+          Service = "cloudtrail.amazonaws.com"
+        }
+        Action = [
+          "kms:GenerateDataKey*",
+          "kms:DescribeKey"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
