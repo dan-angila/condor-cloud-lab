@@ -1,16 +1,9 @@
-# Terraform
 .terraform/
 .terraform.lock.hcl
 *.tfstate
-*.tfstate.*
+*.tfstate.backup
 *.tfplan
 *.tfvars
-crash.log
-
-# Secrets
+dashboard.py
 *.pem
 *.key
-.env
-
-# OS
-.DS_Store
