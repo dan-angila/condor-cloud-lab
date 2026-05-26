@@ -20,7 +20,7 @@ resource "aws_vpc" "main" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
   enable_dns_hostnames = true
-  tags = { Name = "psycho-vpc" }
+  tags                 = { Name = "psycho-vpc" }
 }
 
 # Public Subnet (for load balancers, bastion hosts)
@@ -29,7 +29,7 @@ resource "aws_subnet" "public" {
   cidr_block              = "10.0.1.0/24"
   availability_zone       = "us-east-1a"
   map_public_ip_on_launch = true
-  tags = { Name = "psycho-public" }
+  tags                    = { Name = "psycho-public" }
 }
 
 # Private Subnet (for app servers, databases)
@@ -37,13 +37,13 @@ resource "aws_subnet" "private" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = "10.0.2.0/24"
   availability_zone = "us-east-1a"
-  tags = { Name = "psycho-private" }
+  tags              = { Name = "psycho-private" }
 }
 
 # Internet Gateway (gives public subnet internet access)
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
-  tags = { Name = "psycho-igw" }
+  tags   = { Name = "psycho-igw" }
 }
 
 # Public Route Table
@@ -124,7 +124,7 @@ resource "aws_iam_instance_profile" "ec2_profile" {
 
 # EC2 Instance — sits in public subnet, uses web security group
 resource "aws_instance" "web" {
-  ami                         = "ami-0d5e7e27578d32e47"  # LocalStack accepts any AMI ID
+  ami                         = "ami-0d5e7e27578d32e47" # LocalStack accepts any AMI ID
   instance_type               = "t3.micro"
   key_name                    = aws_key_pair.deployer.key_name
   subnet_id                   = aws_subnet.public.id
@@ -204,17 +204,17 @@ resource "aws_iam_role_policy" "lambda_policy" {
     Statement = [
       {
         Effect   = "Allow"
-        Action   = ["dynamodb:PutItem","dynamodb:GetItem","dynamodb:Scan","dynamodb:UpdateItem","dynamodb:DeleteItem"]
+        Action   = ["dynamodb:PutItem", "dynamodb:GetItem", "dynamodb:Scan", "dynamodb:UpdateItem", "dynamodb:DeleteItem"]
         Resource = aws_dynamodb_table.users.arn
       },
       {
         Effect   = "Allow"
-        Action   = ["sqs:SendMessage","sqs:ReceiveMessage","sqs:DeleteMessage"]
+        Action   = ["sqs:SendMessage", "sqs:ReceiveMessage", "sqs:DeleteMessage"]
         Resource = aws_sqs_queue.jobs.arn
       },
       {
         Effect   = "Allow"
-        Action   = ["logs:CreateLogGroup","logs:CreateLogStream","logs:PutLogEvents"]
+        Action   = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"]
         Resource = "*"
       }
     ]
@@ -287,7 +287,7 @@ resource "aws_lambda_function" "api" {
   environment {
     variables = {
       USERS_TABLE = aws_dynamodb_table.users.name
-      JOBS_QUEUE       = aws_sqs_queue.jobs.url
+      JOBS_QUEUE  = aws_sqs_queue.jobs.url
     }
   }
 
@@ -392,17 +392,17 @@ resource "aws_iam_policy" "dev_policy" {
     Statement = [
       {
         Effect   = "Allow"
-        Action   = ["s3:GetObject","s3:PutObject","s3:ListBucket"]
-        Resource = ["${aws_s3_bucket.app_storage.arn}","${aws_s3_bucket.app_storage.arn}/*"]
+        Action   = ["s3:GetObject", "s3:PutObject", "s3:ListBucket"]
+        Resource = ["${aws_s3_bucket.app_storage.arn}", "${aws_s3_bucket.app_storage.arn}/*"]
       },
       {
         Effect   = "Allow"
-        Action   = ["dynamodb:GetItem","dynamodb:PutItem","dynamodb:Scan"]
+        Action   = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:Scan"]
         Resource = aws_dynamodb_table.users.arn
       },
       {
         Effect   = "Allow"
-        Action   = ["sqs:SendMessage","sqs:ReceiveMessage"]
+        Action   = ["sqs:SendMessage", "sqs:ReceiveMessage"]
         Resource = aws_sqs_queue.jobs.arn
       }
     ]
