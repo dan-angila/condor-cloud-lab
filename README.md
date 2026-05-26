@@ -13,3 +13,6 @@ Production cloud infrastructure on AWS — VPC, EC2, Lambda, DynamoDB, API Gatew
 - **Messaging**: SQS, SNS fanout
 - **Observability**: CloudWatch Logs
 - **IaC**: Terraform (38 resources)
+
+## CI/CD
+Automated deployment via GitHub Actions — terraform plan + apply on every push to main.
