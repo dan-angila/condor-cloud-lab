@@ -138,7 +138,7 @@ resource "aws_instance" "web" {
     yum install -y httpd
     systemctl start httpd
     systemctl enable httpd
-    echo "<h1>Daniel Philip Cloud Lab — Web Server</h1>" > /var/www/html/index.html
+    echo "<h1>Condor Cloud Lab — Web Server</h1>" > /var/www/html/index.html
   USERDATA
 
   tags = { Name = "danielphilip-web-01" }
@@ -243,7 +243,7 @@ def handler(event, context):
     path   = event.get('path', '/')
 
     if method == 'GET' and path == '/health':
-        return respond(200, {'status': 'ok', 'lab': 'Daniel Philip Cloud Lab'})
+        return respond(200, {'status': 'ok', 'lab': 'Condor Cloud Lab'})
 
     if method == 'POST' and path == '/users':
         body = json.loads(event.get('body', '{}'))
@@ -297,7 +297,7 @@ resource "aws_lambda_function" "api" {
 # API Gateway
 resource "aws_api_gateway_rest_api" "main" {
   name        = "danielphilip-api-gw"
-  description = "Daniel Philip Cloud Lab API"
+  description = "Condor Cloud Lab API"
 }
 
 resource "aws_api_gateway_resource" "proxy" {
@@ -418,7 +418,7 @@ resource "aws_iam_group_policy_attachment" "devs_policy" {
 
 output "api_url" {
   value       = "https://${aws_api_gateway_rest_api.main.id}.execute-api.us-east-1.amazonaws.com/prod"
-  description = "Daniel Philip API Gateway URL"
+  description = "Condor API Gateway URL"
 }
 
 output "lambda_name" {
