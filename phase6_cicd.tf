@@ -244,6 +244,21 @@ data "aws_iam_policy_document" "github_actions_permissions" {
       "sns:GetTopicAttributes",
       "sns:ListTopics",
       "sns:ListSubscriptionsByTopic",
+     "kms:ListAliases",
+      "dynamodb:DescribeContinuousBackups",
+      "sns:ListTagsForResource",
+      "cloudtrail:DescribeTrails",
+      "cloudtrail:GetTrailStatus",
+      "cloudtrail:ListTags",
+      "ecr:DescribeRepositories",
+      "ecr:ListTagsForResource",
+      "ecr:GetLifecyclePolicy",
+      "ecr:GetRepositoryPolicy",
+      "lambda:GetFunction",
+      "lambda:GetPolicy",
+      "lambda:ListVersionsByFunction",
+      "lambda:GetFunctionCodeSigningConfig",
+      "apigateway:GET",
     ]
     resources = ["*"]
   }
