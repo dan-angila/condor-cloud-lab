@@ -22,11 +22,11 @@ variable "github_repo" {
 # ECR — private container registry
 # -----------------------------------------------------------
 resource "aws_ecr_repository" "app" {
-  name                 = "${local.service_name}-app"
-  image_tag_mutability = "IMMUTABLE" # tags cannot be overwritten
+  name                 = "${var.project_name}-app"
+  image_tag_mutability = "IMMUTABLE"   # tags cannot be overwritten
 
   image_scanning_configuration {
-    scan_on_push = true # free Basic scanning on every push
+    scan_on_push = true                # free Basic scanning on every push
   }
 
   encryption_configuration {
@@ -35,7 +35,7 @@ resource "aws_ecr_repository" "app" {
   }
 
   tags = {
-    Name = "${local.service_name}-ecr"
+    Name = "${var.project_name}-ecr"
   }
 }
 
@@ -84,7 +84,7 @@ resource "aws_iam_openid_connect_provider" "github" {
   thumbprint_list = [data.tls_certificate.github.certificates[0].sha1_fingerprint]
 
   tags = {
-    Name = "${local.service_name}-github-oidc"
+    Name = "${var.project_name}-github-oidc"
   }
 }
 
@@ -112,7 +112,7 @@ data "aws_iam_policy_document" "github_actions_assume" {
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values = [
+      values   = [
         "repo:${var.github_org}/${var.github_repo}:ref:refs/heads/main",
         "repo:${var.github_org}/${var.github_repo}:pull_request"
       ]
@@ -121,11 +121,11 @@ data "aws_iam_policy_document" "github_actions_assume" {
 }
 
 resource "aws_iam_role" "github_actions" {
-  name               = "${local.service_name}-github-actions"
+  name               = "${var.project_name}-github-actions"
   assume_role_policy = data.aws_iam_policy_document.github_actions_assume.json
 
   tags = {
-    Name = "${local.service_name}-github-actions-role"
+    Name = "${var.project_name}-github-actions-role"
   }
 }
 
@@ -142,7 +142,7 @@ data "aws_iam_policy_document" "github_actions_permissions" {
     actions = [
       "ecr:GetAuthorizationToken"
     ]
-    resources = ["*"] # GetAuthorizationToken has no resource constraint
+    resources = ["*"]   # GetAuthorizationToken has no resource constraint
   }
 
   statement {
@@ -213,7 +213,7 @@ data "aws_iam_policy_document" "github_actions_permissions" {
       "lambda:UpdateAlias"
     ]
     resources = [
-      "arn:aws:lambda:us-east-1:886181574003:function:${local.service_name}-*"
+      "arn:aws:lambda:us-east-1:886181574003:function:${var.project_name}-*"
     ]
   }
 
@@ -232,155 +232,191 @@ data "aws_iam_policy_document" "github_actions_permissions" {
     ]
     resources = ["*"]
   }
+ statement {
+  sid    = "TerraformDeploy"
+  effect = "Allow"
+  actions = [
+    # IAM
+    "iam:CreateRole", "iam:DeleteRole", "iam:GetRole", "iam:PassRole",
+    "iam:AttachRolePolicy", "iam:DetachRolePolicy", "iam:PutRolePolicy",
+    "iam:GetRolePolicy", "iam:DeleteRolePolicy", "iam:TagRole",
+    "iam:CreateUser", "iam:DeleteUser", "iam:GetUser", "iam:TagUser",
+    "iam:CreateGroup", "iam:DeleteGroup", "iam:GetGroup",
+    "iam:AttachGroupPolicy", "iam:DetachGroupPolicy",
+    "iam:CreateInstanceProfile", "iam:DeleteInstanceProfile",
+    "iam:AddRoleToInstanceProfile", "iam:RemoveRoleFromInstanceProfile",
+    "iam:GetInstanceProfile",
+    "iam:CreateOpenIDConnectProvider", "iam:DeleteOpenIDConnectProvider",
+    "iam:GetOpenIDConnectProvider", "iam:TagOpenIDConnectProvider",
+    "iam:CreatePolicy", "iam:DeletePolicy", "iam:GetPolicy",
+    "iam:GetPolicyVersion", "iam:CreatePolicyVersion",
 
-  statement {
-    sid    = "IAMManage"
-    effect = "Allow"
-    actions = [
-      "iam:CreateRole", "iam:DeleteRole", "iam:UpdateRole",
-      "iam:AttachRolePolicy", "iam:DetachRolePolicy",
-      "iam:PutRolePolicy", "iam:DeleteRolePolicy",
-      "iam:CreatePolicy", "iam:DeletePolicy", "iam:CreatePolicyVersion", "iam:DeletePolicyVersion",
-      "iam:CreateUser", "iam:DeleteUser", "iam:TagUser",
-      "iam:CreateGroup", "iam:DeleteGroup",
-      "iam:AddUserToGroup", "iam:RemoveUserFromGroup",
-      "iam:AttachGroupPolicy", "iam:DetachGroupPolicy",
-      "iam:CreateInstanceProfile", "iam:DeleteInstanceProfile",
-      "iam:AddRoleToInstanceProfile", "iam:RemoveRoleFromInstanceProfile",
-      "iam:CreateOpenIDConnectProvider", "iam:DeleteOpenIDConnectProvider",
-      "iam:UpdateOpenIDConnectProviderThumbprint",
-      "iam:PassRole", "iam:TagRole", "iam:TagPolicy",
-    ]
-    resources = ["*"]
-  }
+    # EC2 / VPC
+    "ec2:CreateVpc", "ec2:DeleteVpc", "ec2:ModifyVpcAttribute",
+    "ec2:CreateSubnet", "ec2:DeleteSubnet",
+    "ec2:CreateInternetGateway", "ec2:DeleteInternetGateway",
+    "ec2:AttachInternetGateway", "ec2:DetachInternetGateway",
+    "ec2:CreateRouteTable", "ec2:DeleteRouteTable",
+    "ec2:CreateRoute", "ec2:DeleteRoute",
+    "ec2:AssociateRouteTable", "ec2:DisassociateRouteTable",
+    "ec2:CreateSecurityGroup", "ec2:DeleteSecurityGroup",
+    "ec2:AuthorizeSecurityGroupIngress", "ec2:AuthorizeSecurityGroupEgress",
+    "ec2:RevokeSecurityGroupIngress", "ec2:RevokeSecurityGroupEgress",
+    "ec2:RunInstances", "ec2:TerminateInstances", "ec2:StopInstances",
+    "ec2:ImportKeyPair", "ec2:DeleteKeyPair",
+    "ec2:AllocateAddress", "ec2:ReleaseAddress", "ec2:AssociateAddress",
+    "ec2:CreateFlowLogs", "ec2:DeleteFlowLogs",
+    "ec2:CreateTags", "ec2:DeleteTags",
+    "ec2:ModifyInstanceMetadataDefaults",
 
-  statement {
-    sid    = "EC2Manage"
-    effect = "Allow"
-    actions = [
-      "ec2:CreateVpc", "ec2:DeleteVpc", "ec2:ModifyVpcAttribute",
-      "ec2:CreateSubnet", "ec2:DeleteSubnet", "ec2:ModifySubnetAttribute",
-      "ec2:CreateInternetGateway", "ec2:DeleteInternetGateway",
-      "ec2:AttachInternetGateway", "ec2:DetachInternetGateway",
-      "ec2:CreateRouteTable", "ec2:DeleteRouteTable",
-      "ec2:CreateRoute", "ec2:DeleteRoute",
-      "ec2:AssociateRouteTable", "ec2:DisassociateRouteTable",
-      "ec2:CreateSecurityGroup", "ec2:DeleteSecurityGroup",
-      "ec2:AuthorizeSecurityGroupIngress", "ec2:RevokeSecurityGroupIngress",
-      "ec2:AuthorizeSecurityGroupEgress", "ec2:RevokeSecurityGroupEgress",
-      "ec2:RunInstances", "ec2:TerminateInstances", "ec2:StopInstances", "ec2:StartInstances",
-      "ec2:ImportKeyPair", "ec2:DeleteKeyPair",
-      "ec2:AllocateAddress", "ec2:ReleaseAddress",
-      "ec2:AssociateAddress", "ec2:DisassociateAddress",
-      "ec2:ModifyInstanceMetadataDefaults",
-      "ec2:CreateFlowLogs", "ec2:DeleteFlowLogs",
-      "ec2:CreateTags", "ec2:DeleteTags",
-    ]
-    resources = ["*"]
-  }
+    # S3
+    "s3:CreateBucket", "s3:DeleteBucket",
+    "s3:PutBucketPolicy", "s3:DeleteBucketPolicy",
+    "s3:PutEncryptionConfiguration", "s3:GetBucketEncryption",
+    "s3:PutBucketVersioning", "s3:GetBucketVersioning",
+    "s3:PutBucketPublicAccessBlock", "s3:GetBucketPublicAccessBlock",
+    "s3:PutBucketTagging", "s3:GetBucketTagging",
 
-  statement {
-    sid    = "S3Manage"
-    effect = "Allow"
-    actions = [
-      "s3:CreateBucket", "s3:DeleteBucket",
-      "s3:PutBucketPolicy", "s3:DeleteBucketPolicy",
-      "s3:PutBucketPublicAccessBlock", "s3:GetBucketPublicAccessBlock",
-      "s3:PutBucketVersioning", "s3:GetBucketVersioning",
-      "s3:PutEncryptionConfiguration", "s3:GetEncryptionConfiguration",
-      "s3:PutBucketTagging", "s3:GetBucketTagging",
-      "s3:GetBucketLocation", "s3:GetBucketAcl",
-      "s3:GetAccelerateConfiguration", "s3:GetBucketCORS",
-      "s3:GetBucketLogging", "s3:GetBucketNotification",
-      "s3:GetBucketObjectLockConfiguration", "s3:GetBucketRequestPayment",
-      "s3:GetBucketWebsite", "s3:GetReplicationConfiguration",
-      "s3:GetLifecycleConfiguration", "s3:ListBucketVersions",
-    ]
-    resources = ["*"]
-  }
+    # KMS
+    "kms:CreateKey", "kms:CreateAlias", "kms:DeleteAlias",
+    "kms:TagResource", "kms:UntagResource",
+    "kms:PutKeyPolicy", "kms:GetKeyPolicy",
+    "kms:EnableKeyRotation", "kms:ScheduleKeyDeletion",
 
-  statement {
-    sid    = "MessagingManage"
-    effect = "Allow"
-    actions = [
-      "dynamodb:CreateTable", "dynamodb:DeleteTable", "dynamodb:UpdateTable",
-      "dynamodb:DescribeTable", "dynamodb:DescribeTimeToLive",
-      "dynamodb:DescribeContinuousBackups", "dynamodb:ListTagsOfResource",
-      "dynamodb:TagResource", "dynamodb:UntagResource",
-      "sqs:CreateQueue", "sqs:DeleteQueue", "sqs:SetQueueAttributes",
-      "sqs:GetQueueAttributes", "sqs:TagQueue",
-      "sns:CreateTopic", "sns:DeleteTopic", "sns:SetTopicAttributes",
-      "sns:GetTopicAttributes", "sns:Subscribe", "sns:Unsubscribe",
-      "sns:ListTagsForResource", "sns:TagResource",
-    ]
-    resources = ["*"]
-  }
+    # DynamoDB
+    "dynamodb:CreateTable", "dynamodb:DeleteTable",
+    "dynamodb:UpdateTable", "dynamodb:TagResource",
 
-  statement {
-    sid    = "LogsManage"
-    effect = "Allow"
-    actions = [
-      "logs:CreateLogGroup", "logs:DeleteLogGroup",
-      "logs:PutRetentionPolicy", "logs:DeleteRetentionPolicy",
-      "logs:TagLogGroup", "logs:ListTagsLogGroup",
-      "logs:AssociateKmsKey", "logs:DisassociateKmsKey",
-      "logs:PutLogEvents", "logs:CreateLogStream",
-    ]
-    resources = ["*"]
-  }
+    # SQS
+    "sqs:CreateQueue", "sqs:DeleteQueue",
+    "sqs:SetQueueAttributes", "sqs:TagQueue",
 
-  statement {
-    sid       = "APIGatewayManage"
-    effect    = "Allow"
-    actions   = ["apigateway:*"]
-    resources = ["*"]
-  }
+    # SNS
+    "sns:CreateTopic", "sns:DeleteTopic",
+    "sns:Subscribe", "sns:Unsubscribe",
+    "sns:TagResource", "sns:SetTopicAttributes",
 
-  statement {
-    sid    = "LambdaManage"
-    effect = "Allow"
-    actions = [
-      "lambda:CreateFunction", "lambda:DeleteFunction",
-      "lambda:UpdateFunctionCode", "lambda:UpdateFunctionConfiguration",
-      "lambda:GetFunction", "lambda:GetFunctionConfiguration",
-      "lambda:AddPermission", "lambda:RemovePermission",
-      "lambda:PublishVersion", "lambda:CreateAlias",
-      "lambda:DeleteAlias", "lambda:UpdateAlias",
-      "lambda:ListVersionsByFunction", "lambda:TagResource", "lambda:UntagResource",
-    ]
-    resources = ["*"]
-  }
+    # Lambda
+    "lambda:CreateFunction", "lambda:DeleteFunction",
+    "lambda:AddPermission", "lambda:RemovePermission",
+    "lambda:TagResource",
 
-  statement {
-    sid    = "KMSManage"
-    effect = "Allow"
-    actions = [
-      "kms:CreateKey", "kms:ScheduleKeyDeletion", "kms:CancelKeyDeletion",
-      "kms:EnableKey", "kms:DisableKey",
-      "kms:PutKeyPolicy", "kms:GetKeyPolicy",
-      "kms:CreateAlias", "kms:DeleteAlias", "kms:UpdateAlias",
-      "kms:TagResource", "kms:UntagResource",
-      "kms:EnableKeyRotation", "kms:DisableKeyRotation",
-      "kms:GetKeyRotationStatus", "kms:DescribeKey",
-    ]
-    resources = ["*"]
-  }
+    # API Gateway
+    "apigateway:GET", "apigateway:POST",
+    "apigateway:PUT", "apigateway:DELETE", "apigateway:PATCH",
 
-  statement {
-    sid    = "CloudTrailManage"
-    effect = "Allow"
-    actions = [
-      "cloudtrail:CreateTrail", "cloudtrail:DeleteTrail", "cloudtrail:UpdateTrail",
-      "cloudtrail:StartLogging", "cloudtrail:StopLogging",
-      "cloudtrail:PutEventSelectors", "cloudtrail:AddTags", "cloudtrail:RemoveTags",
-    ]
-    resources = ["*"]
-  }
+    # CloudWatch Logs
+    "logs:CreateLogGroup", "logs:DeleteLogGroup",
+    "logs:PutRetentionPolicy", "logs:TagLogGroup",
+    "logs:TagResource",
+
+    # CloudTrail
+    "cloudtrail:CreateTrail", "cloudtrail:DeleteTrail",
+    "cloudtrail:StartLogging", "cloudtrail:StopLogging",
+    "cloudtrail:PutEventSelectors", "cloudtrail:AddTags",
+
+    # ECR
+    "ecr:CreateRepository", "ecr:DeleteRepository",
+    "ecr:PutLifecyclePolicy", "ecr:TagResource",
+    "ecr:PutImageTagMutability", "ecr:PutImageScanningConfiguration",
+  ]
+  resources = ["*"]
+}
+statement {
+  sid    = "TerraformDeploy"
+  effect = "Allow"
+  actions = [
+    # IAM
+    "iam:CreateRole", "iam:DeleteRole", "iam:GetRole", "iam:PassRole",
+    "iam:AttachRolePolicy", "iam:DetachRolePolicy", "iam:PutRolePolicy",
+    "iam:GetRolePolicy", "iam:DeleteRolePolicy", "iam:TagRole",
+    "iam:CreateUser", "iam:DeleteUser", "iam:GetUser", "iam:TagUser",
+    "iam:CreateGroup", "iam:DeleteGroup", "iam:GetGroup",
+    "iam:AttachGroupPolicy", "iam:DetachGroupPolicy",
+    "iam:CreateInstanceProfile", "iam:DeleteInstanceProfile",
+    "iam:AddRoleToInstanceProfile", "iam:RemoveRoleFromInstanceProfile",
+    "iam:GetInstanceProfile",
+    "iam:CreateOpenIDConnectProvider", "iam:DeleteOpenIDConnectProvider",
+    "iam:GetOpenIDConnectProvider", "iam:TagOpenIDConnectProvider",
+    "iam:CreatePolicy", "iam:DeletePolicy", "iam:GetPolicy",
+    "iam:GetPolicyVersion", "iam:CreatePolicyVersion",
+
+    # EC2 / VPC
+    "ec2:CreateVpc", "ec2:DeleteVpc", "ec2:ModifyVpcAttribute",
+    "ec2:CreateSubnet", "ec2:DeleteSubnet",
+    "ec2:CreateInternetGateway", "ec2:DeleteInternetGateway",
+    "ec2:AttachInternetGateway", "ec2:DetachInternetGateway",
+    "ec2:CreateRouteTable", "ec2:DeleteRouteTable",
+    "ec2:CreateRoute", "ec2:DeleteRoute",
+    "ec2:AssociateRouteTable", "ec2:DisassociateRouteTable",
+    "ec2:CreateSecurityGroup", "ec2:DeleteSecurityGroup",
+    "ec2:AuthorizeSecurityGroupIngress", "ec2:AuthorizeSecurityGroupEgress",
+    "ec2:RevokeSecurityGroupIngress", "ec2:RevokeSecurityGroupEgress",
+    "ec2:RunInstances", "ec2:TerminateInstances", "ec2:StopInstances",
+    "ec2:ImportKeyPair", "ec2:DeleteKeyPair",
+    "ec2:AllocateAddress", "ec2:ReleaseAddress", "ec2:AssociateAddress",
+    "ec2:CreateFlowLogs", "ec2:DeleteFlowLogs",
+    "ec2:CreateTags", "ec2:DeleteTags",
+    "ec2:ModifyInstanceMetadataDefaults",
+
+    # S3
+    "s3:CreateBucket", "s3:DeleteBucket",
+    "s3:PutBucketPolicy", "s3:DeleteBucketPolicy",
+    "s3:PutEncryptionConfiguration", "s3:GetBucketEncryption",
+    "s3:PutBucketVersioning", "s3:GetBucketVersioning",
+    "s3:PutBucketPublicAccessBlock", "s3:GetBucketPublicAccessBlock",
+    "s3:PutBucketTagging", "s3:GetBucketTagging",
+
+    # KMS
+    "kms:CreateKey", "kms:CreateAlias", "kms:DeleteAlias",
+    "kms:TagResource", "kms:UntagResource",
+    "kms:PutKeyPolicy", "kms:GetKeyPolicy",
+    "kms:EnableKeyRotation", "kms:ScheduleKeyDeletion",
+
+    # DynamoDB
+    "dynamodb:CreateTable", "dynamodb:DeleteTable",
+    "dynamodb:UpdateTable", "dynamodb:TagResource",
+
+    # SQS
+    "sqs:CreateQueue", "sqs:DeleteQueue",
+    "sqs:SetQueueAttributes", "sqs:TagQueue",
+
+    # SNS
+    "sns:CreateTopic", "sns:DeleteTopic",
+    "sns:Subscribe", "sns:Unsubscribe",
+    "sns:TagResource", "sns:SetTopicAttributes",
+
+    # Lambda
+    "lambda:CreateFunction", "lambda:DeleteFunction",
+    "lambda:AddPermission", "lambda:RemovePermission",
+    "lambda:TagResource",
+
+    # API Gateway
+    "apigateway:GET", "apigateway:POST",
+    "apigateway:PUT", "apigateway:DELETE", "apigateway:PATCH",
+
+    # CloudWatch Logs
+    "logs:CreateLogGroup", "logs:DeleteLogGroup",
+    "logs:PutRetentionPolicy", "logs:TagLogGroup",
+    "logs:TagResource",
+
+    # CloudTrail
+    "cloudtrail:CreateTrail", "cloudtrail:DeleteTrail",
+    "cloudtrail:StartLogging", "cloudtrail:StopLogging",
+    "cloudtrail:PutEventSelectors", "cloudtrail:AddTags",
+
+    # ECR
+    "ecr:CreateRepository", "ecr:DeleteRepository",
+    "ecr:PutLifecyclePolicy", "ecr:TagResource",
+    "ecr:PutImageTagMutability", "ecr:PutImageScanningConfiguration",
+  ]
+  resources = ["*"]
+ }
 
 }
 
 resource "aws_iam_role_policy" "github_actions" {
-  name   = "${local.service_name}-github-actions-policy"
+  name   = "${var.project_name}-github-actions-policy"
   role   = aws_iam_role.github_actions.id
   policy = data.aws_iam_policy_document.github_actions_permissions.json
 }
