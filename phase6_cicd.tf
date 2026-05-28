@@ -218,17 +218,21 @@ data "aws_iam_policy_document" "github_actions_permissions" {
   }
 
   # Read-only describes so Terraform plan can diff existing state
-  statement {
+   statement {
     sid    = "ReadOnly"
     effect = "Allow"
     actions = [
       "ec2:Describe*",
+      "ec2:GetInstanceMetadataDefaults",
       "iam:Get*",
       "iam:List*",
       "s3:GetBucketPolicy",
       "s3:GetEncryptionConfiguration",
       "cloudtrail:GetTrail*",
-      "logs:DescribeLogGroups"
+      "logs:DescribeLogGroups",
+      "logs:ListTagsForResource",
+      "kms:ListResourceTags",
+      "sqs:ListQueueTags",
     ]
     resources = ["*"]
   }
