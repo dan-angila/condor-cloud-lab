@@ -70,3 +70,9 @@ variable "ssh_public_key" {
   type        = string
   default     = ""
 }
+
+variable "project_name" {
+  description = "Project name prefix for resources"
+  type        = string
+  default     = "condor-cloud-lab"
+}
