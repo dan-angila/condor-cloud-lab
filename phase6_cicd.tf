@@ -221,7 +221,7 @@ data "aws_iam_policy_document" "github_actions_permissions" {
    statement {
     sid    = "ReadOnly"
     effect = "Allow"
-    actions = [
+     actions = [
       "ec2:Describe*",
       "ec2:GetInstanceMetadataDefaults",
       "iam:Get*",
@@ -233,6 +233,17 @@ data "aws_iam_policy_document" "github_actions_permissions" {
       "logs:ListTagsForResource",
       "kms:ListResourceTags",
       "sqs:ListQueueTags",
+      "kms:GetKeyRotationStatus",
+      "kms:DescribeKey",
+      "kms:ListKeys",
+      "dynamodb:DescribeTable",
+      "dynamodb:ListTables",
+      "sqs:GetQueueAttributes",
+      "sqs:GetQueueUrl",
+      "sqs:ListQueues",
+      "sns:GetTopicAttributes",
+      "sns:ListTopics",
+      "sns:ListSubscriptionsByTopic",
     ]
     resources = ["*"]
   }
