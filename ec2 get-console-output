@@ -149,7 +149,7 @@ i-0d15679ad138df470	[H[J[1;1H[H[J[1;1H[    0.000000] Linux version 4.14.35
 [    0.188110] Performance Events: unsupported p6 CPU model 85 no PMU driver, software events only.
 [    0.192067] Hierarchical SRCU implementation.
 [    0.196402] NMI watchdog: Perf event create on CPU 0 failed with -2
-[    0.200004] NMI watchdog: Perf NMI watchdog permanently disabled
+[    0.200004] NMI watchdog: Perf NMI watchdog permanently enabled 
 [    0.204062] smp: Bringing up secondary CPUs ...
 [    0.208121] x86: Booting SMP configuration:
 [    0.212004] .... node  #0, CPUs:      #1
@@ -488,136 +488,255 @@ Welcome to [0;33mAmazon Linux 2[0m!
 [    3.181185] ACPI: Power Button [PWRF]
 [    3.183517] input: Sleep Button as /devices/LNXSYSTM:00/LNXSLPBN:00/input/input5
 [    3.210944] ACPI: Sleep Button [SLPF]
-[[32m  OK  [0m] Started Show Plymouth Boot Screen.
-[[32m  OK  [0m] Started Forward Password Requests to Plymouth Directory Watch.
+[[32m  OK  [0m] Started Show Plymouth Boot Screen.
+
+[[32m  OK  [0m] Started Forward Password Requests to Plymouth Directory Watch.
+
 %G[    3.231913] mousedev: PS/2 mouse device common for all mice
 [    3.248090] AVX2 version of gcm_enc/dec engaged.
 [    3.253169] AES CTR mode by8 optimization enabled
 [    3.278467] alg: No test for pcbc(aes) (pcbc-aes-aesni)
-[[32m  OK  [0m] Started udev Wait for Complete Device Initialization.
-         Starting Activation of DM RAID sets...
+[[32m  OK  [0m] Started udev Wait for Complete Device Initialization.
+
+         Starting Activation of DM RAID sets...
+
 [    3.463004] device-mapper: uevent: version 1.0.3
 [    3.468372] device-mapper: ioctl: 4.37.0-ioctl (2017-09-20) initialised: dm-devel@redhat.com
-[[32m  OK  [0m] Started Activation of DM RAID sets.
-[[32m  OK  [0m] Reached target Local Encrypted Volumes.
-[[32m  OK  [0m] Started Monitoring of LVM2 mirrors,...ng dmeventd or progress polling.
-[[32m  OK  [0m] Reached target Local File Systems (Pre).
-[[32m  OK  [0m] Reached target Local File Systems.
-         Starting Rebuild Journal Catalog...
-         Starting Mark the need to relabel after reboot...
-         Starting Commit a transient machine-id on disk...
-         Starting Preprocess NFS configuration...
-         Starting Create Volatile Files and Directories...
-         Starting Tell Plymouth To Write Out Runtime Data...
-[[32m  OK  [0m] Started Mark the need to relabel after reboot.
-[[32m  OK  [0m] Started Rebuild Journal Catalog.
-[[32m  OK  [0m] Started Preprocess NFS configuration.
-[[32m  OK  [0m] Started Create Volatile Files and Directories.
-         Starting Security Auditing Service...
-         Mounting RPC Pipe File System...
-         Starting Update is Completed...
-[[32m  OK  [0m] Started Update is Completed.
-[[32m  OK  [0m] Started Commit a transient machine-id on disk.
-[[32m  OK  [0m] Started Tell Plymouth To Write Out Runtime Data.
+[[32m  OK  [0m] Started Activation of DM RAID sets.
+
+[[32m  OK  [0m] Reached target Local Encrypted Volumes.
+
+[[32m  OK  [0m] Started Monitoring of LVM2 mirrors,...ng dmeventd or progress polling.
+
+[[32m  OK  [0m] Reached target Local File Systems (Pre).
+
+[[32m  OK  [0m] Reached target Local File Systems.
+
+         Starting Rebuild Journal Catalog...
+
+         Starting Mark the need to relabel after reboot...
+
+         Starting Commit a transient machine-id on disk...
+
+         Starting Preprocess NFS configuration...
+
+         Starting Create Volatile Files and Directories...
+
+         Starting Tell Plymouth To Write Out Runtime Data...
+
+[[32m  OK  [0m] Started Mark the need to relabel after reboot.
+
+[[32m  OK  [0m] Started Rebuild Journal Catalog.
+
+[[32m  OK  [0m] Started Preprocess NFS configuration.
+
+[[32m  OK  [0m] Started Create Volatile Files and Directories.
+
+         Starting Security Auditing Service...
+
+         Mounting RPC Pipe File System...
+
+         Starting Update is Completed...
+
+[[32m  OK  [0m] Started Update is Completed.
+
+[[32m  OK  [0m] Started Commit a transient machine-id on disk.
+
+[[32m  OK  [0m] Started Tell Plymouth To Write Out Runtime Data.
+
 [    3.666417] RPC: Registered named UNIX socket transport module.
 [    3.672253] RPC: Registered udp transport module.
 [    3.677254] RPC: Registered tcp transport module.
 [    3.682368] RPC: Registered tcp NFSv4.1 backchannel transport module.
-[[32m  OK  [0m] Mounted RPC Pipe File System.
-[[32m  OK  [0m] Reached target rpc_pipefs.target.
-[[32m  OK  [0m] Started Security Auditing Service.
-         Starting Update UTMP about System Boot/Shutdown...
-[[32m  OK  [0m] Started Update UTMP about System Boot/Shutdown.
-[[32m  OK  [0m] Reached target System Initialization.
-[[32m  OK  [0m] Started Daily Cleanup of Temporary Directories.
-[[32m  OK  [0m] Reached target Timers.
-[[32m  OK  [0m] Started Flexible branding.
-[[32m  OK  [0m] Reached target Paths.
-[[32m  OK  [0m] Listening on D-Bus System Message Bus Socket.
-[[32m  OK  [0m] Listening on RPCbind Server Activation Socket.
-         Starting RPC bind service...
-[[32m  OK  [0m] Reached target Sockets.
-[[32m  OK  [0m] Reached target Basic System.
-[[32m  OK  [0m] Started libstoragemgmt plug-in server daemon.
-         Starting Login Service...
-         Starting Resets System Activity Logs...
-         Starting GSSAPI Proxy Daemon...
-         Starting NTP client/server...
-[[32m  OK  [0m] Started irqbalance daemon.
-         Starting ACPI Event Daemon...
-         Starting Dump dmesg to /var/log/dmesg...
-[[32m  OK  [0m] Started D-Bus System Message Bus.
-         Starting Hardware RNG Entropy Gatherer Wake threshold service...
-         Starting Initial cloud-init job (pre-networking)...
-[[32m  OK  [0m] Started RPC bind service.
-[[32m  OK  [0m] Started Resets System Activity Logs.
-[[32m  OK  [0m] Started GSSAPI Proxy Daemon.
-[[32m  OK  [0m] Started ACPI Event Daemon.
-[[32m  OK  [0m] Started Dump dmesg to /var/log/dmesg.
-[[32m  OK  [0m] Reached target NFS client services.
-[[32m  OK  [0m] Reached target Remote File Systems (Pre).
-[[32m  OK  [0m] Reached target Remote File Systems.
-[[32m  OK  [0m] Started Login Service.
-[[32m  OK  [0m] Started NTP client/server.
-[[32m  OK  [0m] Started Hardware RNG Entropy Gatherer Wake threshold service.
-[[32m  OK  [0m] Started Hardware RNG Entropy Gatherer Daemon.
-[    4.682781] cloud-init[1739]: Cloud-init v. 19.3-46.amzn2.0.7 running 'init-local' at Mon, 25 May 2026 23:43:19 +0000. Up 4.65 seconds.
-[[32m  OK  [0m] Started Initial cloud-init job (pre-networking).
-[[32m  OK  [0m] Reached target Network (Pre).
-         Starting LSB: Bring up/down networking...
+[[32m  OK  [0m] Mounted RPC Pipe File System.
+
+[[32m  OK  [0m] Reached target rpc_pipefs.target.
+
+[[32m  OK  [0m] Started Security Auditing Service.
+
+         Starting Update UTMP about System Boot/Shutdown...
+
+[[32m  OK  [0m] Started Update UTMP about System Boot/Shutdown.
+
+[[32m  OK  [0m] Reached target System Initialization.
+
+[[32m  OK  [0m] Started Daily Cleanup of Temporary Directories.
+
+[[32m  OK  [0m] Reached target Timers.
+
+[[32m  OK  [0m] Started Flexible branding.
+
+[[32m  OK  [0m] Reached target Paths.
+
+[[32m  OK  [0m] Listening on D-Bus System Message Bus Socket.
+
+[[32m  OK  [0m] Listening on RPCbind Server Activation Socket.
+
+         Starting RPC bind service...
+
+[[32m  OK  [0m] Reached target Sockets.
+
+[[32m  OK  [0m] Reached target Basic System.
+
+[[32m  OK  [0m] Started libstoragemgmt plug-in server daemon.
+
+         Starting Login Service...
+
+         Starting Resets System Activity Logs...
+
+         Starting GSSAPI Proxy Daemon...
+
+         Starting NTP client/server...
+
+[[32m  OK  [0m] Started irqbalance daemon.
+
+         Starting ACPI Event Daemon...
+
+         Starting Dump dmesg to /var/log/dmesg...
+
+[[32m  OK  [0m] Started D-Bus System Message Bus.
+
+         Starting Hardware RNG Entropy Gatherer Wake threshold service...
+
+         Starting Initial cloud-init job (pre-networking)...
+
+[[32m  OK  [0m] Started RPC bind service.
+
+[[32m  OK  [0m] Started Resets System Activity Logs.
+
+[[32m  OK  [0m] Started GSSAPI Proxy Daemon.
+
+[[32m  OK  [0m] Started ACPI Event Daemon.
+
+[[32m  OK  [0m] Started Dump dmesg to /var/log/dmesg.
+
+[[32m  OK  [0m] Reached target NFS client services.
+
+[[32m  OK  [0m] Reached target Remote File Systems (Pre).
+
+[[32m  OK  [0m] Reached target Remote File Systems.
+
+[[32m  OK  [0m] Started Login Service.
+
+[[32m  OK  [0m] Started NTP client/server.
+
+[[32m  OK  [0m] Started Hardware RNG Entropy Gatherer Wake threshold service.
+
+[[32m  OK  [0m] Started Hardware RNG Entropy Gatherer Daemon.
+
+[    4.682781] cloud-init[1739]: Cloud-init v. 19.3-46.amzn2.0.7 running 'init-local' at Mon, 25 May 2026 23:43:19 +0000. Up 4.65 seconds.
+
+[[32m  OK  [0m] Started Initial cloud-init job (pre-networking).
+
+[[32m  OK  [0m] Reached target Network (Pre).
+
+         Starting LSB: Bring up/down networking...
+
 [    5.001960] ena 0000:00:05.0 eth0: Local page cache is disabled for less than 16 channels
-[[32m  OK  [0m] Started LSB: Bring up/down networking.
-         Starting Initial cloud-init job (metadata service crawler)...
-[[32m  OK  [0m] Reached target Network.
-         Starting Postfix Mail Transport Agent...
-[    5.702269] cloud-init[2063]: Cloud-init v. 19.3-46.amzn2.0.7 running 'init' at Mon, 25 May 2026 23:43:20 +0000. Up 5.66 seconds.
-[    5.727246] cloud-init[2063]: ci-info: ++++++++++++++++++++++++++++++++++++++Net device info++++++++++++++++++++++++++++++++++++++
-[    5.727524] cloud-init[2063]: ci-info: +--------+------+----------------------------+---------------+--------+-------------------+
-[    5.727665] cloud-init[2063]: ci-info: | Device |  Up  |          Address           |      Mask     | Scope  |     Hw-Address    |
-[    5.727795] cloud-init[2063]: ci-info: +--------+------+----------------------------+---------------+--------+-------------------+
-[    5.727916] cloud-init[2063]: ci-info: |  eth0  | True |         10.0.1.13          | 255.255.255.0 | global | 02:3d:20:9b:42:eb |
-[    5.728085] cloud-init[2063]: ci-info: |  eth0  | True | fe80::3d:20ff:fe9b:42eb/64 |       .       |  link  | 02:3d:20:9b:42:eb |
-[    5.728211] cloud-init[2063]: ci-info: |   lo   | True |         127.0.0.1          |   255.0.0.0   |  host  |         .         |
-[    5.728322] cloud-init[2063]: ci-info: |   lo   | True |          ::1/128           |       .       |  host  |         .         |
-[    5.728483] cloud-init[2063]: ci-info: +--------+------+----------------------------+---------------+--------+-------------------+
-[    5.728607] cloud-init[2063]: ci-info: ++++++++++++++++++++++++++++++Route IPv4 info+++++++++++++++++++++++++++++++
-[    5.728727] cloud-init[2063]: ci-info: +-------+-----------------+----------+-----------------+-----------+-------+
-[    5.728897] cloud-init[2063]: ci-info: | Route |   Destination   | Gateway  |     Genmask     | Interface | Flags |
-[    5.729017] cloud-init[2063]: ci-info: +-------+-----------------+----------+-----------------+-----------+-------+
-[    5.729141] cloud-init[2063]: ci-info: |   0   |     0.0.0.0     | 10.0.1.1 |     0.0.0.0     |    eth0   |   UG  |
-[    5.729260] cloud-init[2063]: ci-info: |   1   |     10.0.1.0    | 0.0.0.0  |  255.255.255.0  |    eth0   |   U   |
-[    5.729383] cloud-init[2063]: ci-info: |   2   | 169.254.169.254 | 0.0.0.0  | 255.255.255.255 |    eth0   |   UH  |
-[    5.729509] cloud-init[2063]: ci-info: +-------+-----------------+----------+-----------------+-----------+-------+
-[    5.729628] cloud-init[2063]: ci-info: +++++++++++++++++++Route IPv6 info+++++++++++++++++++
-[    5.729748] cloud-init[2063]: ci-info: +-------+-------------+---------+-----------+-------+
-[    5.729865] cloud-init[2063]: ci-info: | Route | Destination | Gateway | Interface | Flags |
-[    5.730013] cloud-init[2063]: ci-info: +-------+-------------+---------+-----------+-------+
-[    5.730133] cloud-init[2063]: ci-info: |   9   |  fe80::/64  |    ::   |    eth0   |   U   |
-[    5.730256] cloud-init[2063]: ci-info: |   11  |    local    |    ::   |    eth0   |   U   |
-[    5.730373] cloud-init[2063]: ci-info: |   12  |   ff00::/8  |    ::   |    eth0   |   U   |
-[    5.730561] cloud-init[2063]: ci-info: +-------+-------------+---------+-----------+-------+
-[[32m  OK  [0m] Started Postfix Mail Transport Agent.
-         Starting Hostname Service...
-[[32m  OK  [0m] Started Hostname Service.
-[[32m  OK  [0m] Started Initial cloud-init job (metadata service crawler).
-         Starting Permit User Sessions...
-[[32m  OK  [0m] Reached target Network is Online.
-         Starting Notify NFS peers of a restart...
-         Starting Finds and configures elastic network interfaces...
-         Starting Dynamically Generate Message Of The Day...
-         Starting System Logging Service...
-[[32m  OK  [0m] Started amazon-ssm-agent.
-[[32m  OK  [0m] Reached target Cloud-config availability.
-         Starting Apply the settings specified in cloud-config...
-         Starting OpenSSH Server Key Generation...
-[[32m  OK  [0m] Started Permit User Sessions.
-[[32m  OK  [0m] Started Notify NFS peers of a restart.
-[[32m  OK  [0m] Started Finds and configures elastic network interfaces.
-[[32m  OK  [0m] Started Job spooling tools.
-         Starting Terminate Plymouth Boot Screen...
-         Starting Wait for Plymouth Boot Screen to Quit...
-[[32m  OK  [0m] Started Command Scheduler.
-[[32m  OK  [0m] Started System Logging Service.
+[[32m  OK  [0m] Started LSB: Bring up/down networking.
+
+         Starting Initial cloud-init job (metadata service crawler)...
+
+[[32m  OK  [0m] Reached target Network.
+
+         Starting Postfix Mail Transport Agent...
+
+[    5.702269] cloud-init[2063]: Cloud-init v. 19.3-46.amzn2.0.7 running 'init' at Mon, 25 May 2026 23:43:20 +0000. Up 5.66 seconds.
+
+[    5.727246] cloud-init[2063]: ci-info: ++++++++++++++++++++++++++++++++++++++Net device info++++++++++++++++++++++++++++++++++++++
+
+[    5.727524] cloud-init[2063]: ci-info: +--------+------+----------------------------+---------------+--------+-------------------+
+
+[    5.727665] cloud-init[2063]: ci-info: | Device |  Up  |          Address           |      Mask     | Scope  |     Hw-Address    |
+
+[    5.727795] cloud-init[2063]: ci-info: +--------+------+----------------------------+---------------+--------+-------------------+
+
+[    5.727916] cloud-init[2063]: ci-info: |  eth0  | True |         10.0.1.13          | 255.255.255.0 | global | 02:3d:20:9b:42:eb |
+
+[    5.728085] cloud-init[2063]: ci-info: |  eth0  | True | fe80::3d:20ff:fe9b:42eb/64 |       .       |  link  | 02:3d:20:9b:42:eb |
+
+[    5.728211] cloud-init[2063]: ci-info: |   lo   | True |         127.0.0.1          |   255.0.0.0   |  host  |         .         |
+
+[    5.728322] cloud-init[2063]: ci-info: |   lo   | True |          ::1/128           |       .       |  host  |         .         |
+
+[    5.728483] cloud-init[2063]: ci-info: +--------+------+----------------------------+---------------+--------+-------------------+
+
+[    5.728607] cloud-init[2063]: ci-info: ++++++++++++++++++++++++++++++Route IPv4 info+++++++++++++++++++++++++++++++
+
+[    5.728727] cloud-init[2063]: ci-info: +-------+-----------------+----------+-----------------+-----------+-------+
+
+[    5.728897] cloud-init[2063]: ci-info: | Route |   Destination   | Gateway  |     Genmask     | Interface | Flags |
+
+[    5.729017] cloud-init[2063]: ci-info: +-------+-----------------+----------+-----------------+-----------+-------+
+
+[    5.729141] cloud-init[2063]: ci-info: |   0   |     0.0.0.0     | 10.0.1.1 |     0.0.0.0     |    eth0   |   UG  |
+
+[    5.729260] cloud-init[2063]: ci-info: |   1   |     10.0.1.0    | 0.0.0.0  |  255.255.255.0  |    eth0   |   U   |
+
+[    5.729383] cloud-init[2063]: ci-info: |   2   | 169.254.169.254 | 0.0.0.0  | 255.255.255.255 |    eth0   |   UH  |
+
+[    5.729509] cloud-init[2063]: ci-info: +-------+-----------------+----------+-----------------+-----------+-------+
+
+[    5.729628] cloud-init[2063]: ci-info: +++++++++++++++++++Route IPv6 info+++++++++++++++++++
+
+[    5.729748] cloud-init[2063]: ci-info: +-------+-------------+---------+-----------+-------+
+
+[    5.729865] cloud-init[2063]: ci-info: | Route | Destination | Gateway | Interface | Flags |
+
+[    5.730013] cloud-init[2063]: ci-info: +-------+-------------+---------+-----------+-------+
+
+[    5.730133] cloud-init[2063]: ci-info: |   9   |  fe80::/64  |    ::   |    eth0   |   U   |
+
+[    5.730256] cloud-init[2063]: ci-info: |   11  |    local    |    ::   |    eth0   |   U   |
+
+[    5.730373] cloud-init[2063]: ci-info: |   12  |   ff00::/8  |    ::   |    eth0   |   U   |
+
+[    5.730561] cloud-init[2063]: ci-info: +-------+-------------+---------+-----------+-------+
+
+[[32m  OK  [0m] Started Postfix Mail Transport Agent.
+
+         Starting Hostname Service...
+
+[[32m  OK  [0m] Started Hostname Service.
+
+[[32m  OK  [0m] Started Initial cloud-init job (metadata service crawler).
+
+         Starting Permit User Sessions...
+
+[[32m  OK  [0m] Reached target Network is Online.
+
+         Starting Notify NFS peers of a restart...
+
+         Starting Finds and configures elastic network interfaces...
+
+         Starting Dynamically Generate Message Of The Day...
+
+         Starting System Logging Service...
+
+[[32m  OK  [0m] Started amazon-ssm-agent.
+
+[[32m  OK  [0m] Reached target Cloud-config availability.
+
+         Starting Apply the settings specified in cloud-config...
+
+         Starting OpenSSH Server Key Generation...
+
+[[32m  OK  [0m] Started Permit User Sessions.
+
+[[32m  OK  [0m] Started Notify NFS peers of a restart.
+
+[[32m  OK  [0m] Started Finds and configures elastic network interfaces.
+
+[[32m  OK  [0m] Started Job spooling tools.
+
+         Starting Terminate Plymouth Boot Screen...
+
+         Starting Wait for Plymouth Boot Screen to Quit...
+
+[[32m  OK  [0m] Started Command Scheduler.
+
+[[32m  OK  [0m] Started System Logging Service.
+
 2026/05/25 23:43:22Z: SSM Agent unable to acquire credentials: <error>no valid credentials could be retrieved for ec2 identity. Default Host Management Err: error calling RequestManagedInstanceRoleToken: AccessDeniedException: Systems Manager's instance management role is not configured for account: 886181574003
 	status code: 400, request id: 20a1e1ef-8489-44e8-b2b6-836bbcfe9341</error>
 [    7.427163] cloud-init[2230]: Cloud-init v. 19.3-46.amzn2.0.7 running 'modules:config' at Mon, 25 May 2026 23:43:22 +0000. Up 7.36 seconds.
