@@ -244,6 +244,8 @@ data "aws_iam_policy_document" "github_actions_permissions" {
       "sns:GetTopicAttributes",
       "sns:ListTopics",
       "sns:ListSubscriptionsByTopic",
+     "dynamodb:DescribeTimeToLive",
+      "sns:GetSubscriptionAttributes",
      "kms:ListAliases",
       "dynamodb:DescribeContinuousBackups",
       "sns:ListTagsForResource",
