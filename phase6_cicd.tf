@@ -23,10 +23,10 @@ variable "github_repo" {
 # -----------------------------------------------------------
 resource "aws_ecr_repository" "app" {
   name                 = "${var.project_name}-app"
-  image_tag_mutability = "IMMUTABLE"   # tags cannot be overwritten
+  image_tag_mutability = "IMMUTABLE" # tags cannot be overwritten
 
   image_scanning_configuration {
-    scan_on_push = true                # free Basic scanning on every push
+    scan_on_push = true # free Basic scanning on every push
   }
 
   encryption_configuration {
@@ -112,7 +112,7 @@ data "aws_iam_policy_document" "github_actions_assume" {
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = [
+      values = [
         "repo:${var.github_org}/${var.github_repo}:ref:refs/heads/main",
         "repo:${var.github_org}/${var.github_repo}:pull_request"
       ]
@@ -142,7 +142,7 @@ data "aws_iam_policy_document" "github_actions_permissions" {
     actions = [
       "ecr:GetAuthorizationToken"
     ]
-    resources = ["*"]   # GetAuthorizationToken has no resource constraint
+    resources = ["*"] # GetAuthorizationToken has no resource constraint
   }
 
   statement {
@@ -155,7 +155,8 @@ data "aws_iam_policy_document" "github_actions_permissions" {
       "ecr:PutImage",
       "ecr:UploadLayerPart",
       "ecr:BatchGetImage",
-      "ecr:DescribeImages"
+      "ecr:DescribeImages",
+      "ecr:GetDownloadUrlForLayer"
     ]
     resources = [aws_ecr_repository.app.arn]
   }
@@ -175,6 +176,46 @@ data "aws_iam_policy_document" "github_actions_permissions" {
       "arn:aws:s3:::terraform-bucket-kali/*"
     ]
   }
+  statement {
+    sid    = "AppBucketsManage"
+    effect = "Allow"
+    actions = [
+      "s3:CreateBucket",
+      "s3:PutBucketVersioning",
+      "s3:PutEncryptionConfiguration",
+      "s3:PutBucketPublicAccessBlock",
+      "s3:PutBucketPolicy",
+      "s3:GetBucketLocation",
+      "s3:GetBucketVersioning",
+      "s3:GetBucketPublicAccessBlock",
+      "s3:GetBucketAcl",
+      "s3:GetBucketCors",
+      "s3:PutBucketCors",
+      "s3:GetBucketLogging",
+      "s3:PutBucketLogging",
+      "s3:GetLifecycleConfiguration",
+      "s3:PutLifecycleConfiguration",
+      "s3:GetReplicationConfiguration",
+      "s3:GetBucketOwnershipControls",
+      "s3:PutBucketOwnershipControls",
+      "s3:GetBucketRequestPayment",
+      "s3:GetBucketWebsite",
+      "s3:GetBucketNotification",
+      "s3:PutBucketNotification",
+      "s3:GetBucketTagging",
+      "s3:PutBucketTagging",
+      "s3:GetAccelerateConfiguration",
+      "s3:GetBucketObjectLockConfiguration",
+      "s3:HeadBucket",
+      "s3:ListBucket"
+    ]
+    resources = [
+      "arn:aws:s3:::danielphilip-terraform-bucket",
+      "arn:aws:s3:::danielphilip-app-storage",
+      "arn:aws:s3:::danielphilip-cloudtrail-logs"
+    ]
+  }
+
 
   # DynamoDB state locking
   statement {
@@ -209,8 +250,11 @@ data "aws_iam_policy_document" "github_actions_permissions" {
     actions = [
       "lambda:UpdateFunctionCode",
       "lambda:GetFunction",
+      "lambda:GetFunctionConfiguration",
       "lambda:PublishVersion",
-      "lambda:UpdateAlias"
+      "lambda:UpdateAlias",
+      "lambda:TagResource",
+      "lambda:ListTags"
     ]
     resources = [
       "arn:aws:lambda:us-east-1:886181574003:function:${var.project_name}-*"
@@ -218,10 +262,10 @@ data "aws_iam_policy_document" "github_actions_permissions" {
   }
 
   # Read-only describes so Terraform plan can diff existing state
-   statement {
+  statement {
     sid    = "ReadOnly"
     effect = "Allow"
-     actions = [
+    actions = [
       "ec2:Describe*",
       "ec2:GetInstanceMetadataDefaults",
       "iam:Get*",
@@ -243,7 +287,7 @@ data "aws_iam_policy_document" "github_actions_permissions" {
       "dynamodb:List*",
       "sns:Get*",
       "sns:List*",
-     "kms:ListAliases",
+      "kms:ListAliases",
       "cloudtrail:DescribeTrails",
       "cloudtrail:GetTrailStatus",
       "cloudtrail:ListTags",
@@ -259,96 +303,96 @@ data "aws_iam_policy_document" "github_actions_permissions" {
     ]
     resources = ["*"]
   }
- statement {
-  sid    = "TerraformDeploy"
-  effect = "Allow"
-  actions = [
-    # IAM
-    "iam:CreateRole", "iam:DeleteRole", "iam:GetRole", "iam:PassRole",
-    "iam:AttachRolePolicy", "iam:DetachRolePolicy", "iam:PutRolePolicy",
-    "iam:GetRolePolicy", "iam:DeleteRolePolicy", "iam:TagRole",
-    "iam:CreateUser", "iam:DeleteUser", "iam:GetUser", "iam:TagUser",
-    "iam:CreateGroup", "iam:DeleteGroup", "iam:GetGroup",
-    "iam:AttachGroupPolicy", "iam:DetachGroupPolicy",
-    "iam:CreateInstanceProfile", "iam:DeleteInstanceProfile",
-    "iam:AddRoleToInstanceProfile", "iam:RemoveRoleFromInstanceProfile",
-    "iam:GetInstanceProfile",
-    "iam:CreateOpenIDConnectProvider", "iam:DeleteOpenIDConnectProvider",
-    "iam:GetOpenIDConnectProvider", "iam:TagOpenIDConnectProvider",
-    "iam:CreatePolicy", "iam:DeletePolicy", "iam:GetPolicy",
-    "iam:GetPolicyVersion", "iam:CreatePolicyVersion",
+  statement {
+    sid    = "TerraformDeploy"
+    effect = "Allow"
+    actions = [
+      # IAM
+      "iam:CreateRole", "iam:DeleteRole", "iam:GetRole", "iam:PassRole",
+      "iam:AttachRolePolicy", "iam:DetachRolePolicy", "iam:PutRolePolicy",
+      "iam:GetRolePolicy", "iam:DeleteRolePolicy", "iam:TagRole",
+      "iam:CreateUser", "iam:DeleteUser", "iam:GetUser", "iam:TagUser",
+      "iam:CreateGroup", "iam:DeleteGroup", "iam:GetGroup",
+      "iam:AttachGroupPolicy", "iam:DetachGroupPolicy",
+      "iam:CreateInstanceProfile", "iam:DeleteInstanceProfile",
+      "iam:AddRoleToInstanceProfile", "iam:RemoveRoleFromInstanceProfile",
+      "iam:GetInstanceProfile",
+      "iam:CreateOpenIDConnectProvider", "iam:DeleteOpenIDConnectProvider",
+      "iam:GetOpenIDConnectProvider", "iam:TagOpenIDConnectProvider",
+      "iam:CreatePolicy", "iam:DeletePolicy", "iam:GetPolicy",
+      "iam:GetPolicyVersion", "iam:CreatePolicyVersion",
 
-    # EC2 / VPC
-    "ec2:CreateVpc", "ec2:DeleteVpc", "ec2:ModifyVpcAttribute",
-    "ec2:CreateSubnet", "ec2:DeleteSubnet",
-    "ec2:CreateInternetGateway", "ec2:DeleteInternetGateway",
-    "ec2:AttachInternetGateway", "ec2:DetachInternetGateway",
-    "ec2:CreateRouteTable", "ec2:DeleteRouteTable",
-    "ec2:CreateRoute", "ec2:DeleteRoute",
-    "ec2:AssociateRouteTable", "ec2:DisassociateRouteTable",
-    "ec2:CreateSecurityGroup", "ec2:DeleteSecurityGroup",
-    "ec2:AuthorizeSecurityGroupIngress", "ec2:AuthorizeSecurityGroupEgress",
-    "ec2:RevokeSecurityGroupIngress", "ec2:RevokeSecurityGroupEgress",
-    "ec2:RunInstances", "ec2:TerminateInstances", "ec2:StopInstances",
-    "ec2:ImportKeyPair", "ec2:DeleteKeyPair",
-    "ec2:AllocateAddress", "ec2:ReleaseAddress", "ec2:AssociateAddress",
-    "ec2:CreateFlowLogs", "ec2:DeleteFlowLogs",
-    "ec2:CreateTags", "ec2:DeleteTags",
-    "ec2:ModifyInstanceMetadataDefaults",
+      # EC2 / VPC
+      "ec2:CreateVpc", "ec2:DeleteVpc", "ec2:ModifyVpcAttribute",
+      "ec2:CreateSubnet", "ec2:DeleteSubnet",
+      "ec2:CreateInternetGateway", "ec2:DeleteInternetGateway",
+      "ec2:AttachInternetGateway", "ec2:DetachInternetGateway",
+      "ec2:CreateRouteTable", "ec2:DeleteRouteTable",
+      "ec2:CreateRoute", "ec2:DeleteRoute",
+      "ec2:AssociateRouteTable", "ec2:DisassociateRouteTable",
+      "ec2:CreateSecurityGroup", "ec2:DeleteSecurityGroup",
+      "ec2:AuthorizeSecurityGroupIngress", "ec2:AuthorizeSecurityGroupEgress",
+      "ec2:RevokeSecurityGroupIngress", "ec2:RevokeSecurityGroupEgress",
+      "ec2:RunInstances", "ec2:TerminateInstances", "ec2:StopInstances",
+      "ec2:ImportKeyPair", "ec2:DeleteKeyPair",
+      "ec2:AllocateAddress", "ec2:ReleaseAddress", "ec2:AssociateAddress",
+      "ec2:CreateFlowLogs", "ec2:DeleteFlowLogs",
+      "ec2:CreateTags", "ec2:DeleteTags",
+      "ec2:ModifyInstanceMetadataDefaults",
 
-    # S3
-    "s3:CreateBucket", "s3:DeleteBucket",
-    "s3:PutBucketPolicy", "s3:DeleteBucketPolicy",
-    "s3:PutEncryptionConfiguration", "s3:GetBucketEncryption",
-    "s3:PutBucketVersioning", "s3:GetBucketVersioning",
-    "s3:PutBucketPublicAccessBlock", "s3:GetBucketPublicAccessBlock",
-    "s3:PutBucketTagging", "s3:GetBucketTagging",
+      # S3
+      "s3:CreateBucket", "s3:DeleteBucket",
+      "s3:PutBucketPolicy", "s3:DeleteBucketPolicy",
+      "s3:PutEncryptionConfiguration", "s3:GetBucketEncryption",
+      "s3:PutBucketVersioning", "s3:GetBucketVersioning",
+      "s3:PutBucketPublicAccessBlock", "s3:GetBucketPublicAccessBlock",
+      "s3:PutBucketTagging", "s3:GetBucketTagging",
 
-    # KMS
-    "kms:CreateKey", "kms:CreateAlias", "kms:DeleteAlias",
-    "kms:TagResource", "kms:UntagResource",
-    "kms:PutKeyPolicy", "kms:GetKeyPolicy",
-    "kms:EnableKeyRotation", "kms:ScheduleKeyDeletion",
+      # KMS
+      "kms:CreateKey", "kms:CreateAlias", "kms:DeleteAlias",
+      "kms:TagResource", "kms:UntagResource",
+      "kms:PutKeyPolicy", "kms:GetKeyPolicy",
+      "kms:EnableKeyRotation", "kms:ScheduleKeyDeletion",
 
-    # DynamoDB
-    "dynamodb:CreateTable", "dynamodb:DeleteTable",
-    "dynamodb:UpdateTable", "dynamodb:TagResource",
+      # DynamoDB
+      "dynamodb:CreateTable", "dynamodb:DeleteTable",
+      "dynamodb:UpdateTable", "dynamodb:TagResource",
 
-    # SQS
-    "sqs:CreateQueue", "sqs:DeleteQueue",
-    "sqs:SetQueueAttributes", "sqs:TagQueue",
+      # SQS
+      "sqs:CreateQueue", "sqs:DeleteQueue",
+      "sqs:SetQueueAttributes", "sqs:TagQueue",
 
-    # SNS
-    "sns:CreateTopic", "sns:DeleteTopic",
-    "sns:Subscribe", "sns:Unsubscribe",
-    "sns:TagResource", "sns:SetTopicAttributes",
+      # SNS
+      "sns:CreateTopic", "sns:DeleteTopic",
+      "sns:Subscribe", "sns:Unsubscribe",
+      "sns:TagResource", "sns:SetTopicAttributes",
 
-    # Lambda
-    "lambda:CreateFunction", "lambda:DeleteFunction",
-    "lambda:AddPermission", "lambda:RemovePermission",
-    "lambda:TagResource",
+      # Lambda
+      "lambda:CreateFunction", "lambda:DeleteFunction",
+      "lambda:AddPermission", "lambda:RemovePermission",
+      "lambda:TagResource",
 
-    # API Gateway
-    "apigateway:GET", "apigateway:POST",
-    "apigateway:PUT", "apigateway:DELETE", "apigateway:PATCH",
+      # API Gateway
+      "apigateway:GET", "apigateway:POST",
+      "apigateway:PUT", "apigateway:DELETE", "apigateway:PATCH",
 
-    # CloudWatch Logs
-    "logs:CreateLogGroup", "logs:DeleteLogGroup",
-    "logs:PutRetentionPolicy", "logs:TagLogGroup",
-    "logs:TagResource",
+      # CloudWatch Logs
+      "logs:CreateLogGroup", "logs:DeleteLogGroup",
+      "logs:PutRetentionPolicy", "logs:TagLogGroup",
+      "logs:TagResource",
 
-    # CloudTrail
-    "cloudtrail:CreateTrail", "cloudtrail:DeleteTrail",
-    "cloudtrail:StartLogging", "cloudtrail:StopLogging",
-    "cloudtrail:PutEventSelectors", "cloudtrail:AddTags",
+      # CloudTrail
+      "cloudtrail:CreateTrail", "cloudtrail:DeleteTrail",
+      "cloudtrail:StartLogging", "cloudtrail:StopLogging",
+      "cloudtrail:PutEventSelectors", "cloudtrail:AddTags",
 
-    # ECR
-    "ecr:CreateRepository", "ecr:DeleteRepository",
-    "ecr:PutLifecyclePolicy", "ecr:TagResource",
-    "ecr:PutImageTagMutability", "ecr:PutImageScanningConfiguration",
-  ]
-  resources = ["*"]
- }
+      # ECR
+      "ecr:CreateRepository", "ecr:DeleteRepository",
+      "ecr:PutLifecyclePolicy", "ecr:TagResource",
+      "ecr:PutImageTagMutability", "ecr:PutImageScanningConfiguration",
+    ]
+    resources = ["*"]
+  }
 
 }
 

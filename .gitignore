@@ -7,3 +7,4 @@
 dashboard.py
 *.pem
 *.key
+github-actions-policy.json
