@@ -72,17 +72,17 @@ resource "aws_iam_policy" "dev_policy" {
     Statement = [
       {
         Effect   = "Allow"
-        Action   = ["s3:GetObject","s3:PutObject","s3:ListBucket"]
-        Resource = [aws_s3_bucket.app_storage.arn,"${aws_s3_bucket.app_storage.arn}/*"]
+        Action   = ["s3:GetObject", "s3:PutObject", "s3:ListBucket"]
+        Resource = [aws_s3_bucket.app_storage.arn, "${aws_s3_bucket.app_storage.arn}/*"]
       },
       {
         Effect   = "Allow"
-        Action   = ["dynamodb:GetItem","dynamodb:PutItem","dynamodb:Scan"]
+        Action   = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:Scan"]
         Resource = aws_dynamodb_table.users.arn
       },
       {
         Effect   = "Allow"
-        Action   = ["sqs:SendMessage","sqs:ReceiveMessage"]
+        Action   = ["sqs:SendMessage", "sqs:ReceiveMessage"]
         Resource = aws_sqs_queue.jobs.arn
       }
     ]
@@ -207,7 +207,7 @@ resource "aws_security_group" "web" {
 resource "aws_iam_role" "ec2_role" {
   name = "${local.service_name}-ec2-role"
   assume_role_policy = jsonencode({
-    Version = "2012-10-17"
+    Version   = "2012-10-17"
     Statement = [{ Action = "sts:AssumeRole", Effect = "Allow", Principal = { Service = "ec2.amazonaws.com" } }]
   })
   tags = local.common_tags
@@ -231,7 +231,7 @@ resource "aws_instance" "web" {
   vpc_security_group_ids      = [aws_security_group.web.id]
   iam_instance_profile        = aws_iam_instance_profile.ec2_profile.name
   associate_public_ip_address = true
-  user_data = <<-USERDATA
+  user_data                   = <<-USERDATA
     #!/bin/bash
     yum update -y
     yum install -y httpd
@@ -239,7 +239,7 @@ resource "aws_instance" "web" {
     systemctl enable httpd
     echo "<h1>Condor Cloud Lab</h1>" > /var/www/html/index.html
   USERDATA
-  tags = merge(local.common_tags, { Name = "${local.service_name}-web-01" })
+  tags                        = merge(local.common_tags, { Name = "${local.service_name}-web-01" })
 }
 
 resource "aws_eip" "web" {
@@ -296,7 +296,7 @@ resource "aws_sns_topic_subscription" "alerts_to_sqs" {
 resource "aws_iam_role" "lambda_role" {
   name = "${local.service_name}-lambda-role"
   assume_role_policy = jsonencode({
-    Version = "2012-10-17"
+    Version   = "2012-10-17"
     Statement = [{ Action = "sts:AssumeRole", Effect = "Allow", Principal = { Service = "lambda.amazonaws.com" } }]
   })
   tags = local.common_tags
@@ -310,17 +310,17 @@ resource "aws_iam_role_policy" "lambda_policy" {
     Statement = [
       {
         Effect   = "Allow"
-        Action   = ["dynamodb:PutItem","dynamodb:GetItem","dynamodb:Scan","dynamodb:UpdateItem","dynamodb:DeleteItem"]
+        Action   = ["dynamodb:PutItem", "dynamodb:GetItem", "dynamodb:Scan", "dynamodb:UpdateItem", "dynamodb:DeleteItem"]
         Resource = aws_dynamodb_table.users.arn
       },
       {
         Effect   = "Allow"
-        Action   = ["sqs:SendMessage","sqs:ReceiveMessage","sqs:DeleteMessage"]
+        Action   = ["sqs:SendMessage", "sqs:ReceiveMessage", "sqs:DeleteMessage"]
         Resource = aws_sqs_queue.jobs.arn
       },
       {
         Effect   = "Allow"
-        Action   = ["logs:CreateLogGroup","logs:CreateLogStream","logs:PutLogEvents"]
+        Action   = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"]
         Resource = "*"
       }
     ]
@@ -374,7 +374,7 @@ resource "aws_api_gateway_integration" "lambda" {
 resource "aws_api_gateway_deployment" "main" {
   rest_api_id = aws_api_gateway_rest_api.main.id
   depends_on  = [aws_api_gateway_integration.lambda]
-  lifecycle   { create_before_destroy = true }
+  lifecycle { create_before_destroy = true }
 }
 
 resource "aws_api_gateway_stage" "prod" {
@@ -408,7 +408,7 @@ resource "aws_cloudwatch_log_group" "vpc_flow_logs" {
 resource "aws_iam_role" "vpc_flow_logs" {
   name = "${local.service_name}-vpc-flow-logs-role"
   assume_role_policy = jsonencode({
-    Version = "2012-10-17"
+    Version   = "2012-10-17"
     Statement = [{ Action = "sts:AssumeRole", Effect = "Allow", Principal = { Service = "vpc-flow-logs.amazonaws.com" } }]
   })
 }
@@ -420,7 +420,7 @@ resource "aws_iam_role_policy" "vpc_flow_logs" {
     Version = "2012-10-17"
     Statement = [{
       Effect   = "Allow"
-      Action   = ["logs:CreateLogGroup","logs:CreateLogStream","logs:PutLogEvents","logs:DescribeLogGroups","logs:DescribeLogStreams"]
+      Action   = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents", "logs:DescribeLogGroups", "logs:DescribeLogStreams"]
       Resource = "*"
     }]
   })

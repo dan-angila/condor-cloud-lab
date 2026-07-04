@@ -47,18 +47,18 @@ resource "aws_kms_key_policy" "main" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid    = "Enable IAM User Permissions"
-        Effect = "Allow"
+        Sid       = "Enable IAM User Permissions"
+        Effect    = "Allow"
         Principal = { AWS = "arn:aws:iam::886181574003:root" }
-        Action   = "kms:*"
-        Resource = "*"
+        Action    = "kms:*"
+        Resource  = "*"
       },
       {
-        Sid    = "Allow CloudTrail to encrypt logs"
-        Effect = "Allow"
+        Sid       = "Allow CloudTrail to encrypt logs"
+        Effect    = "Allow"
         Principal = { Service = "cloudtrail.amazonaws.com" }
-        Action   = ["kms:GenerateDataKey*", "kms:DescribeKey"]
-        Resource = "*"
+        Action    = ["kms:GenerateDataKey*", "kms:DescribeKey"]
+        Resource  = "*"
       }
     ]
   })
